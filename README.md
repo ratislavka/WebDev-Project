@@ -9,5 +9,5 @@ A system for users to browse and book tickets for upcoming events like concerts,
 
 **Developers:**
 - Ratislav Ovchinnikov - FrontEnd, Angular 
-- Abzal - BackEnd, Django
+- Kabdoldayev Abzal - BackEnd, Django
 - Rassul Tampekov - Styling
