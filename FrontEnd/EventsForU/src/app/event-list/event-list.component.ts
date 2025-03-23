@@ -1,11 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import {CommonModule, NgIf} from '@angular/common';
+import { EventItemComponent } from '../event-item/event-item.component';
+import { Event } from '../data';
 
 @Component({
   selector: 'app-event-list',
-  imports: [],
+  standalone: true,
+  imports: [
+    CommonModule,
+    EventItemComponent
+  ],
   templateUrl: './event-list.component.html',
-  styleUrl: './event-list.component.css'
+  styleUrls: ['./event-list.component.css']
 })
 export class EventListComponent {
+  @Input() events: Event[] = [];
 
 }

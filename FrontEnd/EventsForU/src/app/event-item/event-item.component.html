@@ -1,1 +1,18 @@
-<p>event-item works!</p>
+<div class="product-item">
+  <img [src]="event.image" alt="{{ event.name }}" class="product-image">
+  <h3>{{ event.name }}</h3>
+  <p>{{ event.description }}</p>
+  <p>Rating: {{ event.rating }}</p>
+
+  <button id="redirect_to_cart" >Add to Cart</button>
+
+  <div class="share-buttons">
+    <button id="whatsapp_button" (click)="shareOnWhatsApp(event.link)">Share on WhatsApp</button>
+    <button id="telegram_button" (click)="shareOnTelegram(event.link)">Share on Telegram</button>
+  </div>
+
+  <div class="product-images">
+    <img *ngFor="let image of event.images" [src]="image" alt="{{ event.name }}" class="gallery-image"/>
+  </div>
+</div>
+
