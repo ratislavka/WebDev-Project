@@ -1,16 +1,16 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Product } from '../data';
+import { Event } from '../data';
+import { Component, Input } from '@angular/core';
 
 @Component({
-  selector: 'app-product-item',
+  selector: 'app-event-item',
+  templateUrl: './event-item.component.html',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './event-item.component.html',
   styleUrls: ['./event-item.component.css']
 })
 export class EventItemComponent {
-  @Input() Event!: Event;
+  @Input() event: any;
 
   redirectToCart(link: string): void {
     window.open(link, '_blank');
