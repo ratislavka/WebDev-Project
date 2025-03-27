@@ -3,6 +3,8 @@
   <h3>{{ event.name }}</h3>
   <p>{{ event.description }}</p>
   <p>Rating: {{ event.rating }}</p>
+  <p>{{event.date}}</p>
+  <p>{{event.place}}</p>
 
   <button id="redirect_to_cart" >Add to Cart</button>
 
@@ -11,8 +13,11 @@
     <button id="telegram_button" (click)="shareOnTelegram(event.link)">Share on Telegram</button>
   </div>
 
-  <div class="product-images">
-    <img *ngFor="let image of event.images" [src]="image" alt="{{ event.name }}" class="gallery-image"/>
+  <!--
+    <div class="product-images">
+      <img *ngFor="let image of event.images" [src]="image" alt="{{ event.name }}" class="gallery-image"/>
+    </div>
+-->
+
   </div>
-</div>
 
