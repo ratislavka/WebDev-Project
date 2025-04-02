@@ -1,4 +1,10 @@
-<app-event-item
-  *ngFor="let event of events"
-  [event]="event"
-></app-event-item>
+<div class="event-cards">
+  <div *ngFor="let event of events" class="event-card">
+    <a [routerLink]="['/event', event.id]">
+      <img [src]="event.image" alt="{{ event.name }}">
+      <h3>{{ event.name }}</h3>
+    </a>
+    <p>{{ event.date }} | {{ event.place }}</p>
+    <button (click)="addToCart(event)">Add to Cart</button>
+  </div>
+</div>
