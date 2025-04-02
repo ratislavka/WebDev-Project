@@ -1,27 +1,12 @@
-<h1> {{event.name}} </h1>
-
-<img src = {{event.image }} alt="">
-
-<h5>Description</h5>
-<p>{{event.description}}</p>
-
-<h5>Venue</h5>
-<p>{{event.place}}</p>
-
-<h5>Date</h5>
-<p>{{event.date}}</p>
-
-<h5>Genre</h5>
-<p>{{event.genre}}</p>
-
-<button id="redirect_to_cart" >Add to Cart</button>
-
-<div class="share-buttons">
-  <button id="whatsapp_button" (click)="shareOnWhatsApp(event.link)">Share on WhatsApp</button>
-  <button id="telegram_button" (click)="shareOnTelegram(event.link)">Share on Telegram</button>
+<div *ngIf="event; else noEvent">
+  <h2>{{ event.name }}</h2>
+  <img [src]="event.image" alt="{{ event.name }}">
+  <p>{{ event.description }}</p>
+  <p><strong>Date:</strong> {{ event.date }}</p>
+  <p><strong>Place:</strong> {{ event.place }}</p>
+  <a [href]="event.link" target="_blank">More Information</a>
+  <button (click)="addToCart()">Add to Cart</button>
 </div>
-
-
-<footer>
-  <p>our footer</p>
-</footer>
+<ng-template #noEvent>
+  <p>Event not found.</p>
+</ng-template>
