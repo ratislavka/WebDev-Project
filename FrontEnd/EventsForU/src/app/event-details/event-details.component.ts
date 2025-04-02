@@ -2,9 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Event, EVENTS } from '../data';
 import { CartService } from '../cart.service';
+import {CommonModule} from '@angular/common';
 
 @Component({
   selector: 'app-event-details',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './event-details.component.html',
   styleUrls: ['./event-details.component.css']
 })

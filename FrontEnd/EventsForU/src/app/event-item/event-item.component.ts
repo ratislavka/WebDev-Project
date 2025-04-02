@@ -26,4 +26,7 @@ export class EventItemComponent {
     window.open(telegramUrl, '_blank');
   }
 
+  goToDetails() {
+
+  }
 }

@@ -1,24 +1,47 @@
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+/* src/app/app.component.css */
+.app-header {
+  background-color: #f8f8f8;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
 }
 
-.categories button {
-  margin: 5px;
-  padding: 10px;
-  cursor: pointer;
-  border: none;
-  border-radius: 10px;
-}
-
-.categories button.selected {
-  background-color: #007bff;
-  color: white;
-}
-
-.product-list {
+.navbar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.categories {
+  display: flex;
+  gap: 1rem;
+}
+
+.category-item {
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.category-item:hover {
+  background-color: #e0e0e0;
+}
+
+.nav-buttons button {
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.nav-buttons button:hover {
+  background-color: #0056b3;
+}
+
+.app-main {
+  padding: 1rem;
 }
