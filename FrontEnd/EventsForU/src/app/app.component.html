@@ -1,22 +1,22 @@
-<div class="container">
-  <h1>Online Store</h1>
+<!-- src/app/app.component.html -->
+<header class="app-header">
+  <nav class="navbar">
+    <!-- Categories list -->
+    <div class="categories">
+      <span *ngFor="let category of categories" (click)="selectCategory(category)" class="category-item">
+        {{ category.name }}
+      </span>
+    </div>
+    <!-- Navigation buttons -->
+    <div class="nav-buttons">
+      <button routerLink="">Main page</button>
+      <button routerLink="/login">Login</button>
+      <button routerLink="/cart">Cart</button>
+    </div>
+  </nav>
+</header>
 
-
-  <div class="categories">
-    <button
-      *ngFor="let category of categories"
-      (click)="selectCategory(category)"
-      [class.selected]="selectedCategory?.id === category.id"
-    >
-      {{ category.name }}
-    </button>
-  </div>
-
-
-  <app-event-list></app-event-list>
-</div>
-
-
-<footer>
-  <p>our footer</p>
-</footer>
+<main class="app-main">
+  <!-- The router outlet is where routed components will be injected -->
+  <router-outlet></router-outlet>
+</main>

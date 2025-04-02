@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-  loginForm: FormGroup;
+  loginForm!: FormGroup; // Use '!' to denote definite assignment
   error: string = '';
 
   constructor(
@@ -23,7 +23,6 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Initialize the login form with username and password fields.
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
       password: ['', Validators.required]
