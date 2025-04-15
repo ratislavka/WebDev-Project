@@ -15,13 +15,16 @@ export interface Event {
 export interface Category {
   id: number;
   name: string;
-  events: Event[];
 }
 
-// If you don’t have any category data yet, use an empty array:
-export const CATEGORIES: Category[] = [];
+export const CATEGORIES: Category[] = [
+  { id: 1, name: 'Theatre' },
+  { id: 2, name: 'Movies' },
+  { id: 3, name: 'Tech' },
+  // Add more categories as needed
+];
 
-// Also, if you have a hardcoded events array, define it here:
+
 export const EVENTS: Event[] = [
   {
     id: 1,

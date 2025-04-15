@@ -1,50 +1,48 @@
 import { Component, OnInit } from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import { AuthService, LoginResponse } from '../auth.service';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../auth.service';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-login',
+  standalone: true,
+  imports: [ReactiveFormsModule, NgIf],
   templateUrl: './login.component.html',
-  imports:
-    [
-    ReactiveFormsModule
-  ],
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-  loginForm!: FormGroup; // Use '!' to denote definite assignment
-  error: string = '';
+  loginForm!: FormGroup;
+  submitted = false;
+  loginError: string = '';
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private formBuilder: FormBuilder) {}
 
   ngOnInit(): void {
-    this.loginForm = this.fb.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required]
+    this.loginForm = this.formBuilder.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
+  get f() {
+    return this.loginForm.controls;
+  }
+
   onSubmit(): void {
-    if (this.loginForm.valid) {
-      const { username, password } = this.loginForm.value;
-      this.authService.login(username, password).subscribe({
-        next: (res: LoginResponse) => {
-          // Save the token locally (for example, in localStorage).
-          localStorage.setItem('token', res.token);
-          // Optionally, store other user info if needed.
-          // Navigate to the main page (adjust the route as needed).
-          this.router.navigate(['/']);
-        },
-        error: (err) => {
-          // Handle error (for instance, wrong credentials).
-          this.error = 'Invalid username or password';
-        }
-      });
+    this.submitted = true;
+
+    if (this.loginForm.invalid) {
+      return;
+    }
+
+    const { email, password } = this.loginForm.value;
+
+    // Simulate login
+    if (email === 'test@example.com' && password === 'password123') {
+      alert('Login successful!');
+    } else {
+      this.loginError = 'Invalid email or password.';
     }
   }
 }

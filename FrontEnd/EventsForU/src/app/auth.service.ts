@@ -16,11 +16,9 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(this.loginUrl, { username, password });
+  login(username: string, password: string): Observable<any> {
+    return this.http.post('/api/login', { username, password });
   }
 
-  logout(): void {
-    localStorage.removeItem('token');
-  }
+
 }
