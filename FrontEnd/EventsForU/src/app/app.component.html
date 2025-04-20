@@ -1,12 +1,28 @@
-<!-- src/app/app.component.html -->
 <header class="app-header">
   <nav class="navbar">
+
+    <!-- “All” resets the category filter -->
+    <span
+      (click)="resetFilters()"
+      [class.active]="!selectedCategory && !selectedDate"
+      class="category-item">
+  All Events
+</span>
+
     <!-- Categories list -->
     <div class="categories">
       <span *ngFor="let category of categories" (click)="selectCategory(category)" class="category-item">
-        {{ category.name }}
+        {{ category }}
       </span>
     </div>
+
+    <!-- Dates list -->
+    <div class="dates">
+      <span *ngFor="let date of dates" (click)="selectDate(date)" class="date-item">
+        {{ date }}
+      </span>
+    </div>
+
     <!-- Navigation buttons -->
     <div class="nav-buttons">
       <button routerLink="">Main page</button>
@@ -17,6 +33,11 @@
 </header>
 
 <main class="app-main">
-  <!-- The router outlet is where routed components will be injected -->
-  <router-outlet></router-outlet>
+  <app-event-list
+    [category]="selectedCategory"
+    [date]="selectedDate">
+  </app-event-list>
+
+
+
 </main>

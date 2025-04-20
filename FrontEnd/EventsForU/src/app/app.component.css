@@ -27,6 +27,10 @@
   background-color: #e0e0e0;
 }
 
+.date-item:hover {
+  background-color: #e0e0e0;
+}
+
 .nav-buttons button {
   margin-left: 1rem;
   padding: 0.5rem 1rem;

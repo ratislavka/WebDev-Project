@@ -1,4 +1,18 @@
-// src/app/data.ts
+
+export enum Category {
+  Theatre = 'Theatre',
+  Movies = 'Movies',
+  Tech = 'Tech',
+  // Add more categories as needed
+}
+
+export enum EventDate {
+  May1 = '1 May',
+  May2 = '2 May',
+  May3 = '3 May',
+  // Add more dates as needed
+}
+
 
 export interface Event {
   id: number;
@@ -8,22 +22,10 @@ export interface Event {
   rating: number;
   images: string[];
   link: string;
-  date: string;
   place: string;
+  category: Category;
+  date: EventDate;
 }
-
-export interface Category {
-  id: number;
-  name: string;
-}
-
-export const CATEGORIES: Category[] = [
-  { id: 1, name: 'Theatre' },
-  { id: 2, name: 'Movies' },
-  { id: 3, name: 'Tech' },
-  // Add more categories as needed
-];
-
 
 export const EVENTS: Event[] = [
   {
@@ -34,8 +36,9 @@ export const EVENTS: Event[] = [
     rating: 4.8,
     link: 'https://angularconnect.com',
     images: ['assets/angular-connect.png'],
-    date: '29 March',
-    place: 'Almaty'
+    place: 'Almaty',
+    category: Category.Tech,
+    date: EventDate.May3
   },
   {
     id: 2,
@@ -45,7 +48,8 @@ export const EVENTS: Event[] = [
     rating: 4.5,
     link: 'https://ng-conf.org',
     images: ['assets/ng-conf.png'],
-    date: '15 April',
-    place: 'Almaty'
+    place: 'Almaty',
+    category: Category.Movies,
+    date: EventDate.May1
   }
 ];

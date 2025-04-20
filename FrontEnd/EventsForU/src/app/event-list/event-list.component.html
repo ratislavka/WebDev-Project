@@ -1,5 +1,5 @@
 <div class="event-cards">
-  <div *ngFor="let event of events" class="event-card">
+  <div *ngFor="let event of filteredEvents" class="event-card">
     <a [routerLink]="['/event', event.id]">
       <img [src]="event.image" alt="{{ event.name }}">
       <h3>{{ event.name }}</h3>
