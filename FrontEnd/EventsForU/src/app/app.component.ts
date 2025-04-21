@@ -18,20 +18,6 @@ export class AppComponent {
   categories = Object.values(Category);
   dates = Object.values(EventDate);
 
-  selectedCategory: Category | null = null;
-  selectedDate: EventDate | null = null;
 
-  selectCategory(category: Category | null): void {
-    this.selectedCategory = category;
-  }
-
-  selectDate(date: EventDate | null): void {
-    this.selectedDate = date;
-  }
-
-  resetFilters(): void {
-    this.selectedCategory = null;
-    this.selectedDate   = null;
-  }
 
 }

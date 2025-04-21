@@ -3,6 +3,7 @@ export enum Category {
   Theatre = 'Theatre',
   Movies = 'Movies',
   Tech = 'Tech',
+  Art = 'Art',
   // Add more categories as needed
 }
 
