@@ -1,18 +1,61 @@
-<div class="cart-container">
-  <h2>Your Cart</h2>
-  <div *ngIf="cart.length > 0; else emptyCart">
-    <div *ngFor="let event of cart" class="cart-item">
-      <img [src]="event.image" alt="{{ event.name }}">
-      <div class="cart-item-details">
-        <h3>{{ event.name }}</h3>
-        <p><strong>Date:</strong> {{ event.date }}</p>
-        <p><strong>Place:</strong> {{ event.place }}</p>
-        <button (click)="removeFromCart(event.id)">Remove</button>
+<div class="container mx-auto p-4">
+  <h2 class="text-2xl font-semibold mb-4">Your Cart</h2>
+
+  <div *ngIf="orderPlacedMessage" class="mb-4 p-3 rounded-md text-white"
+       [ngClass]="placedOrderId ? 'bg-green-500' : 'bg-yellow-500'">
+    {{ orderPlacedMessage }}
+    <a *ngIf="placedOrderId" [routerLink]="['/order-history']" class="underline ml-2 hover:text-green-100">View Order History</a>
+  </div>
+
+  <div *ngIf="(cartItems$ | async)?.length; else emptyCart" class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+      </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+      <tr *ngFor="let item of (cartItems$ | async); trackBy: trackByItemId">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-700">{{ item.price | currency:'USD' }}</div> </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-700">{{ item.quantity }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-semibold text-gray-900">{{ (item.price * item.quantity) | currency:'USD' }}</div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="p-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+      <div>
+        <span class="text-lg font-semibold text-gray-800">Total: {{ (cartTotal$ | async) | currency:'USD' }}</span>
+      </div>
+      <div class="flex gap-3">
+        <button (click)="handleClearCart()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md shadow-sm transition duration-150 ease-in-out">
+          Clear Cart
+        </button>
+        <button (click)="handlePlaceOrder()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150 ease-in-out">
+          Place Order (Simulated)
+        </button>
       </div>
     </div>
-    <button (click)="clearCart()">Clear Cart</button>
+
   </div>
+
   <ng-template #emptyCart>
-    <p>Your cart is empty.</p>
+    <div class="text-center p-8 bg-white shadow rounded-lg">
+      <p class="text-gray-500 text-lg">Your cart is empty.</p>
+      <a routerLink="/" class="mt-4 inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm transition duration-150 ease-in-out">
+        Browse Events
+      </a>
+    </div>
   </ng-template>
 </div>

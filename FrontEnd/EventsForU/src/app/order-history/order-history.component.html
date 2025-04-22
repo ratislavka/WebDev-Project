@@ -1,0 +1,52 @@
+<div class="container mx-auto p-4">
+  <h2 class="text-2xl font-semibold mb-4">Your Order History</h2>
+
+  <div *ngIf="isLoading" class="text-center py-8">
+    <p class="text-gray-500">Loading order history...</p>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length > 0" class="space-y-6">
+    <div *ngFor="let order of orders; trackBy: trackByOrderId" class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
+      <div class="p-4 bg-gray-100 border-b border-gray-200 flex flex-wrap justify-between items-center gap-2">
+        <div>
+          <span class="font-semibold text-gray-800">Order ID:</span>
+          <span class="ml-1 text-sm text-gray-600 font-mono">{{ order.id }}</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-800">Date:</span>
+          <span class="ml-1 text-sm text-gray-600">{{ order.date | date:'medium' }}</span> </div>
+        <div>
+          <span class="font-semibold text-gray-800">Total:</span>
+          <span class="ml-1 text-lg font-bold text-green-700">{{ order.totalAmount | currency:'USD' }}</span>
+        </div>
+      </div>
+
+      <div class="p-4">
+        <h4 class="text-sm font-medium text-gray-600 mb-2 uppercase tracking-wider">Items in this Order:</h4>
+        <table class="min-w-full divide-y divide-gray-100 text-sm">
+          <thead class="bg-gray-50 text-gray-500">
+          <tr>
+            <th class="px-4 py-2 text-left font-medium">Item Name</th>
+            <th class="px-4 py-2 text-right font-medium">Price</th>
+            <th class="px-4 py-2 text-right font-medium">Quantity</th>
+            <th class="px-4 py-2 text-right font-medium">Subtotal</th>
+          </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-100 text-gray-700">
+          <tr *ngFor="let item of order.items">
+            <td class="px-4 py-2">{{ item.name }}</td>
+            <td class="px-4 py-2 text-right">{{ item.price | currency:'USD' }}</td>
+            <td class="px-4 py-2 text-right">{{ item.quantity }}</td>
+            <td class="px-4 py-2 text-right font-medium">{{ (item.price * item.quantity) | currency:'USD' }}</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length === 0" class="text-center p-8 bg-white shadow rounded-lg">
+    <p class="text-gray-500 text-lg">You haven't placed any orders yet.</p>
+  </div>
+
+</div>
