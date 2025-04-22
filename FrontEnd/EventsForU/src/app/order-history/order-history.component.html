@@ -1,52 +1,41 @@
-<div class="container mx-auto p-4">
-  <h2 class="text-2xl font-semibold mb-4">Your Order History</h2>
+<div class="order-history-container">
+  <h2 class="page-title">Your Order History</h2>
 
-  <div *ngIf="isLoading" class="text-center py-8">
-    <p class="text-gray-500">Loading order history...</p>
+  <div *ngIf="isLoading" class="loading-message">
+    <p>Loading order history...</p>
   </div>
 
-  <div *ngIf="!isLoading && orders.length > 0" class="space-y-6">
-    <div *ngFor="let order of orders; trackBy: trackByOrderId" class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
-      <div class="p-4 bg-gray-100 border-b border-gray-200 flex flex-wrap justify-between items-center gap-2">
-        <div>
-          <span class="font-semibold text-gray-800">Order ID:</span>
-          <span class="ml-1 text-sm text-gray-600 font-mono">{{ order.id }}</span>
+  <div *ngIf="!isLoading && orders.length > 0" class="order-list">
+    <div *ngFor="let order of orders; trackBy: trackByOrderId" class="order-card">
+      <div class="order-header">
+        <div class="order-info-item">
+          <span class="info-label">Order ID:</span>
+          <span class="info-value order-id-value">{{ order.id }}</span>
         </div>
-        <div>
-          <span class="font-semibold text-gray-800">Date:</span>
-          <span class="ml-1 text-sm text-gray-600">{{ order.date | date:'medium' }}</span> </div>
-        <div>
-          <span class="font-semibold text-gray-800">Total:</span>
-          <span class="ml-1 text-lg font-bold text-green-700">{{ order.totalAmount | currency:'USD' }}</span>
+        <div class="order-info-item">
+          <span class="info-label">Date:</span>
+          <span class="info-value">{{ order.date | date:'medium' }}</span>
+        </div>
+        <div class="order-info-item">
+          <span class="info-label">Total:</span>
+          <span class="info-value order-total-value">{{ order.totalAmount | currency:'USD' }}</span>
         </div>
       </div>
 
-      <div class="p-4">
-        <h4 class="text-sm font-medium text-gray-600 mb-2 uppercase tracking-wider">Items in this Order:</h4>
-        <table class="min-w-full divide-y divide-gray-100 text-sm">
-          <thead class="bg-gray-50 text-gray-500">
-          <tr>
-            <th class="px-4 py-2 text-left font-medium">Item Name</th>
-            <th class="px-4 py-2 text-right font-medium">Price</th>
-            <th class="px-4 py-2 text-right font-medium">Quantity</th>
-            <th class="px-4 py-2 text-right font-medium">Subtotal</th>
-          </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-100 text-gray-700">
-          <tr *ngFor="let item of order.items">
-            <td class="px-4 py-2">{{ item.name }}</td>
-            <td class="px-4 py-2 text-right">{{ item.price | currency:'USD' }}</td>
-            <td class="px-4 py-2 text-right">{{ item.quantity }}</td>
-            <td class="px-4 py-2 text-right font-medium">{{ (item.price * item.quantity) | currency:'USD' }}</td>
-          </tr>
-          </tbody>
-        </table>
+      <div class="order-items-section">
+        <h4 class="items-title">Items in this Order:</h4>
+        <div class="order-items-list">
+          <div *ngFor="let item of order.items" class="order-item">
+            <span class="item-name">{{ item.name }}</span>
+            <span class="item-details">
+              ({{ item.quantity }} x {{ item.price | currency:'USD' }}) </span>
+            <span class="item-subtotal">
+              Subtotal: {{ (item.price * item.quantity) | currency:'USD' }} </span>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <div *ngIf="!isLoading && orders.length === 0" class="text-center p-8 bg-white shadow rounded-lg">
-    <p class="text-gray-500 text-lg">You haven't placed any orders yet.</p>
-  </div>
+    </div> </div> <div *ngIf="!isLoading && orders.length === 0" class="no-orders-message">
+  <p>You haven't placed any orders yet.</p>
+</div>
 
 </div>
