@@ -24,30 +24,10 @@ class Customer(models.Model):
     def __str__(self):
         return f"{self.name} {self.surname}"
 
-# To allow multiple bookings in a single cart
-class BookingCart(models.Model):
+        
+class BookingItem(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
     booking_date = models.DateTimeField(auto_now_add=True)
-    
-    @property
-    def get_cart_total(self):
-        bookings = self.bookingitem_set.all()
-        total = sum([item.get_total for item in bookings])
-        return total
-
-    @property
-    def get_cart_items(self):
-        bookings = self.bookingitem_set.all()
-        total = sum([item.quantity for item in bookings])
-        return total
-    
-    def __str__(self):
-        return f"{str(self.id)} x {self.customer}"
-        
-
-# одно событие с количеством, отдельный элемент
-class BookingItem(models.Model):
-    booking = models.ForeignKey(BookingCart, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     # Indicates whether the booking has been completed (i.e., purchased)
@@ -56,6 +36,18 @@ class BookingItem(models.Model):
     @property
     def get_total(self):
         total = self.event.price * self.quantity
+        return total
+
+    @property
+    def get_cart_total(self):
+        bookings = BookingItem.objects.all()
+        total = sum([item.get_total for item in bookings])
+        return total
+
+    @property
+    def get_cart_items(self):
+        bookings = BookingItem.objects.filter(customer=self.customer)
+        total = sum([item.quantity for item in bookings])
         return total
     
     def __str__(self):

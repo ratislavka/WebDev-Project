@@ -1,4 +1,4 @@
-from api.models import BookingCart, Ticket, BookingItem
+from api.models import Ticket, BookingItem
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
@@ -20,36 +20,28 @@ class CustomerSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
-class BookingCartSerializer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    booking_date = serializers.DateTimeField(read_only=True)
-    cart_total = serializers.SerializerMethodField()
-    cart_items = serializers.SerializerMethodField()
-
-    def get_cart_model(self, obj):
-        return obj.get_cart_total()
-    
-    def get_cart_items(self, obj):
-        return obj.get_cart_items()
-
-    class Meta:
-        model = BookingCart
-        fields = ['id', 'customer', 'booking_date', 'cart_total', 'cart_items']
-
-
 class BookingItemSerializer(serializers.ModelSerializer):
-    booking = BookingCartSerializer(read_only=True)
+    customer = CustomerSerializer(read_only=True)
+    booking_date = serializers.DateTimeField()
     event = EventSerializer(read_only=True)
     quantity = serializers.IntegerField()
     complete = serializers.BooleanField()
     total = serializers.SerializerMethodField()
+    cart_model = serializers.SerializerMethodField()
+    cart_items = serializers.SerializerMethodField()
 
     def get_total(self, obj):
         return obj.get_total()
+
+    def get_cart_model(self, obj):
+        return obj.get_cart_total()
+
+    def get_cart_items(self, obj):
+        return obj.get_cart_items()
     
     class Meta:
         model = BookingItem
-        fields = ['booking', 'event', 'quantity', 'complete', 'total']
+        fields = ['id', 'customer', 'booking_date', 'event', 'quantity', 'complete', 'total', 'cart_model', 'cart_items']
 
 
 class TicketSerializer(serializers.ModelSerializer):
