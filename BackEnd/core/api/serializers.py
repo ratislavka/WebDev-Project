@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 
 class EventSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     name = serializers.CharField()
     location = serializers.CharField()
     date = serializers.DateField()
@@ -14,6 +15,7 @@ class EventSerializer(serializers.Serializer):
 
 
 class CustomerSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     name = serializers.CharField()
     surname = serializers.CharField()
@@ -22,8 +24,8 @@ class CustomerSerializer(serializers.Serializer):
 
 class BookingItemSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
-    booking_date = serializers.DateTimeField()
     event = EventSerializer(read_only=True)
+    booking_date = serializers.DateTimeField()
     quantity = serializers.IntegerField()
     complete = serializers.BooleanField()
     total = serializers.SerializerMethodField()
