@@ -20,12 +20,12 @@ export class EventBrowserComponent {
   // Filter state properties
   selectedCategory: Category | null = null;
   selectedDate: EventDate | null = null;
-  searchTerm: string = ''; // Property to hold the search query
+  searchTerm: string = '';
 
   // Make categories, dates, and all events available
   availableCategories = Object.values(Category);
   availableDates     = Object.values(EventDate);
-  allEvents: Event[] = EVENTS; // Keep the master list here
+  allEvents: Event[] = EVENTS;
 
   constructor() { }
 
@@ -50,15 +50,11 @@ export class EventBrowserComponent {
       events = events.filter(e =>
           e.name.toLowerCase().includes(lowerCaseSearchTerm) ||
           e.place.toLowerCase().includes(lowerCaseSearchTerm)
-        // Add more fields to search if needed (e.g., description)
-        // || (e.description && e.description.toLowerCase().includes(lowerCaseSearchTerm))
       );
     }
 
     return events;
   }
-
-  // --- Filter selection methods remain the same ---
 
   selectCategory(category: Category | null): void {
     this.selectedCategory = category;
@@ -71,6 +67,6 @@ export class EventBrowserComponent {
   resetFilters(): void {
     this.selectedCategory = null;
     this.selectedDate   = null;
-    this.searchTerm = ''; // Also reset search term
+    this.searchTerm = '';
   }
 }

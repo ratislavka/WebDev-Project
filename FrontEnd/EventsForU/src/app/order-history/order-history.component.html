@@ -1,40 +1,29 @@
-<div class="order-history-container">
+<div class="order-history-page">
   <h2 class="page-title">Your Order History</h2>
 
-  <div *ngIf="isLoading" class="loading-message">
+  <div *ngIf="isLoading" class="loading-indicator">
     <p>Loading order history...</p>
   </div>
 
-  <div *ngIf="!isLoading && orders.length > 0" class="order-list">
-    <div *ngFor="let order of orders; trackBy: trackByOrderId" class="order-card">
-      <div class="order-header">
-        <div class="order-info-item">
-          <span class="info-label">Order ID:</span>
-          <span class="info-value order-id-value">{{ order.id }}</span>
-        </div>
-        <div class="order-info-item">
-          <span class="info-label">Date:</span>
-          <span class="info-value">{{ order.date | date:'medium' }}</span>
-        </div>
-        <div class="order-info-item">
-          <span class="info-label">Total:</span>
-          <span class="info-value order-total-value">{{ order.totalAmount | currency:'USD' }}</span>
-        </div>
+  <div *ngIf="!isLoading && orders.length > 0" class="orders-list-container">
+    <div *ngFor="let order of orders; trackBy: trackByOrderId" class="order-summary-card">
+      <div class="order-summary-header">
+        <span>Order ID: {{ order.id }}</span>
+        <span>Date: {{ order.date | date:'medium' }}</span>
+        <span>Total: {{ order.totalAmount | currency:'USD' }}</span>
       </div>
 
-      <div class="order-items-section">
-        <h4 class="items-title">Items in this Order:</h4>
-        <div class="order-items-list">
-          <div *ngFor="let item of order.items" class="order-item">
+      <div class="order-items-details">
+        <h4 class="items-list-title">Items:</h4>
+        <div class="items-list">
+          <div *ngFor="let item of order.items" class="order-item-row">
             <span class="item-name">{{ item.name }}</span>
-            <span class="item-details">
-              ({{ item.quantity }} x {{ item.price | currency:'USD' }}) </span>
-            <span class="item-subtotal">
-              Subtotal: {{ (item.price * item.quantity) | currency:'USD' }} </span>
+            <span class="item-quantity-price">({{ item.quantity }} x {{ item.price | currency:'USD' }})</span>
+            <span class="item-row-subtotal">Subtotal: {{ (item.price * item.quantity) | currency:'USD' }}</span>
           </div>
         </div>
       </div>
-    </div> </div> <div *ngIf="!isLoading && orders.length === 0" class="no-orders-message">
+    </div> </div> <div *ngIf="!isLoading && orders.length === 0" class="no-orders-info">
   <p>You haven't placed any orders yet.</p>
 </div>
 

@@ -20,13 +20,12 @@ export class EventListComponent implements OnInit, OnChanges { // Implement OnCh
   sortedEvents: Event[] = [];
 
   // Sorting state properties (remain the same)
-  currentSortKey: keyof Event | null = 'date'; // Default sort key
-  sortDirection: 'asc' | 'desc' = 'asc'; // Default sort direction
+  currentSortKey: keyof Event | null = 'date';
+  sortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(private cartService: CartService) {}
 
   ngOnInit(): void {
-    // Initial sort when component loads
     this.applySort();
   }
 
@@ -34,12 +33,10 @@ export class EventListComponent implements OnInit, OnChanges { // Implement OnCh
   ngOnChanges(changes: SimpleChanges): void {
     // If the eventsToShow input has changed, re-apply the sort
     if (changes['eventsToShow']) {
-      // console.log('Input events changed, re-sorting...'); // For debugging
       this.applySort();
     }
   }
 
-  // Method to set sorting parameters (remains the same)
   sortEvents(key: keyof Event): void {
     if (this.currentSortKey === key) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -47,12 +44,9 @@ export class EventListComponent implements OnInit, OnChanges { // Implement OnCh
       this.currentSortKey = key;
       this.sortDirection = 'asc';
     }
-    // Apply the sort based on the new state
     this.applySort();
   }
 
-  // Method that performs the actual sorting logic
-  // Now sorts the 'eventsToShow' input array
   private applySort(): void {
     // Create a copy of the input array to avoid modifying it directly
     let sorted = [...this.eventsToShow];
@@ -71,12 +65,10 @@ export class EventListComponent implements OnInit, OnChanges { // Implement OnCh
         return this.sortDirection === 'asc' ? comparison : comparison * -1;
       });
     }
-    // Update the internal array used by the template
     this.sortedEvents = sorted;
-    // console.log('Sorted events:', this.sortedEvents); // For debugging
   }
 
-  // Add to cart functionality (remains the same)
+
   addToCart(event: Event): void {
     this.cartService.addToCart(event);
     alert(`${event.name} has been added to your cart.`);
