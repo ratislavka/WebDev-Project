@@ -27,8 +27,8 @@ class Customer(models.Model):
         
 class BookingItem(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
-    booking_date = models.DateTimeField(auto_now_add=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    booking_date = models.DateTimeField(auto_now_add=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     # Indicates whether the booking has been completed (i.e., purchased)
     complete = models.BooleanField(default=False, null=True, blank=False) 

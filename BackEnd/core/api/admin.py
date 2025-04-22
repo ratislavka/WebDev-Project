@@ -3,7 +3,6 @@ from .models import BookingItem, Customer, Event, Ticket
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ['name', 'genre', 'date']
     search_field = ['name', 'genre', 'date']
 
 @admin.register(Customer)
