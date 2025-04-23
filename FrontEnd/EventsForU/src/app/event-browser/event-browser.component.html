@@ -1,58 +1,37 @@
-<div class="event-browser-page">
-  <h2 class="page-title">Browse Events</h2>
+<div class="sorting-controls">
+  <span class="sort-label">Sort by:</span>
+  <button (click)="sortEvents('name')" class="sort-button" [class.active]="currentSortKey === 'name'">
+    Name
+    <span *ngIf="currentSortKey === 'name'" class="sort-indicator">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+  </button>
+  <button (click)="sortEvents('date')" class="sort-button" [class.active]="currentSortKey === 'date'">
+    Date
+    <span *ngIf="currentSortKey === 'date'" class="sort-indicator">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+  </button>
+  <button (click)="sortEvents('price')" class="sort-button" [class.active]="currentSortKey === 'price'">
+    Price
+    <span *ngIf="currentSortKey === 'price'" class="sort-indicator">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+  </button>
+</div>
 
-  <div class="controls-container">
-    <h3 class="controls-title">Filter & Search Events</h3>
-
-    <div class="search-section">
-      <label for="search-input" class="control-label">Search by Name or Place:</label>
-      <input
-        type="text"
-        id="search-input"
-        [(ngModel)]="searchTerm"
-        placeholder="Enter search term..."
-        class="search-input-field"
-      />
-    </div>
-
-    <div class="filter-section">
-      <label class="control-label">By Category:</label>
-      <div class="button-group">
-        <button (click)="selectCategory(null)"
-                class="filter-button"
-                [class.active]="selectedCategory === null">
-          All Categories
+<div class="event-list">
+  <ng-container *ngIf="sortedEvents && sortedEvents.length > 0; else noEventsView">
+    <div *ngFor="let event of sortedEvents" class="event-card">
+      <a [routerLink]="['/event', event.id]" class="event-card-link">
+        <img [src]="event.imageUrl" alt="{{ event.name }}" class="event-image"
+             onerror="this.src='https://placehold.co/600x400/eee/ccc?text=Image+Error'"> <div class="event-info">
+        <h3 class="event-title">{{ event.name }}</h3>
+        <p class="event-meta">{{ event.date | date:'mediumDate' }} | {{ event.location }}</p> <p class="event-price">{{ event.price | currency:'USD' }}</p> </div>
+      </a>
+      <div class="event-card-actions">
+        <button (click)="addToCart(event)" class="button add-cart-button">
+          Add to Cart
         </button>
-        <button *ngFor="let category of availableCategories"
-                (click)="selectCategory(category)"
-                class="filter-button"
-                [class.active]="selectedCategory === category">
-          {{ category }} </button>
       </div>
     </div>
+  </ng-container>
 
-    <div class="filter-section">
-      <label class="control-label">By Date:</label>
-      <div class="button-group">
-        <button (click)="selectDate(null)"
-                class="filter-button"
-                [class.active]="selectedDate === null">
-          All Dates
-        </button>
-        <button *ngFor="let date of availableDates"
-                (click)="selectDate(date)"
-                class="filter-button"
-                [class.active]="selectedDate === date">
-          {{ date }} </button>
-      </div>
-    </div>
-
-    <div class="reset-section">
-      <button (click)="resetFilters()" class="button reset-button">
-        Reset All Filters
-      </button>
-    </div>
-
-  </div> <app-event-list [eventsToShow]="filteredEvents"></app-event-list>
-
+  <ng-template #noEventsView>
+    <p class="no-events-info">No events found matching your criteria.</p>
+  </ng-template>
 </div>

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CartService, Order } from '../cart.service';
+import { CartService, Ticket } from '../cart.service'; // Import Ticket interface
 
 @Component({
   selector: 'app-order-history',
@@ -11,8 +11,11 @@ import { CartService, Order } from '../cart.service';
 })
 export class OrderHistoryComponent implements OnInit {
 
-  orders: Order[] = [];
+  // --- FIX: Use Ticket[] ---
+  tickets: Ticket[] = [];
   isLoading: boolean = true;
+  errorMessage: string | null = null;
+
   constructor(private cartService: CartService) { }
 
   ngOnInit(): void {
@@ -21,16 +24,30 @@ export class OrderHistoryComponent implements OnInit {
 
   loadOrderHistory(): void {
     this.isLoading = true;
-    setTimeout(() => {
-      this.orders = this.cartService.getOrderHistory();
-      // Sort orders by date, newest first
-      this.orders.sort((a, b) => b.date.getTime() - a.date.getTime());
-      this.isLoading = false;
+    this.errorMessage = null;
+    this.tickets = [];
+
+    // --- FIX: Subscribe to the Observable ---
+    this.cartService.getOrderHistory().subscribe({
+      next: (fetchedTickets) => {
+        // --- FIX: Sort using the converted booking_date_obj ---
+        // Ensure booking_date_obj exists before sorting
+        this.tickets = fetchedTickets.sort((a, b) => {
+          const dateA = a.booking_item.booking_date_obj?.getTime() ?? 0;
+          const dateB = b.booking_item.booking_date_obj?.getTime() ?? 0;
+          return dateB - dateA; // Sort descending (newest first)
+        });
+        this.isLoading = false;
+      },
+      error: (err: Error) => {
+        this.errorMessage = `Failed to load order history: ${err.message}`;
+        this.isLoading = false;
+      }
     });
   }
 
-  // Optional: Track orders by ID for *ngFor performance
-  trackByOrderId(index: number, order: Order): string {
-    return order.id;
+  // --- FIX: Return type number | string ---
+  trackByTicketId(index: number, ticket: Ticket): number | string {
+    return ticket.id;
   }
 }
