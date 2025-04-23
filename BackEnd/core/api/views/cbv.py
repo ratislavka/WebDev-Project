@@ -108,6 +108,9 @@ class CartViewSet(viewsets.ModelViewSet):
     serializer_class = BookingItemSerializer
 
     def get_permissions(self):
+        if self.action == 'list' or self.action == 'create':
+
+            return [IsAuthenticated()]
         return [AllowAny()]
 
     def create(self, request, *args, **kwargs):

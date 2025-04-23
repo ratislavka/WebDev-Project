@@ -3,7 +3,6 @@ import { ActivatedRoute } from '@angular/router';
 import { Event, EVENTS } from '../data';
 import { CartService } from '../cart.service';
 import {CommonModule} from '@angular/common';
-import {EventService} from '../event.service';
 
 @Component({
   selector: 'app-event-details',
@@ -17,7 +16,6 @@ export class EventDetailsComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private eventService: EventService,
     private cartService: CartService
   ) {}
 
@@ -27,12 +25,9 @@ export class EventDetailsComponent implements OnInit {
   }
 
   addToCart(): void {
-    if (this.event && this.event.id) { // Check if event and event.id exist
-      // Pass only the event ID (number)
-      this.cartService.addToCart(this.event.id, 1); // Add 1 quantity
-      alert(`${this.event.name} added to cart!`); // Simple feedback
-    } else {
-      console.error("Cannot add to cart, event data or ID is missing.");
+    if (this.event) {
+      this.cartService.addToCart(this.event);
+      alert(`${this.event.name} has been added to your cart.`);
     }
   }
 }

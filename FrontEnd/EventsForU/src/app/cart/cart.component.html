@@ -1,45 +1,44 @@
-<div class="cart-page">
-  <h2 class="page-title">Your Cart</h2>
+<div class="cart-container">
+  <h2 class="cart-title">Your Cart</h2>
 
-  <div *ngIf="orderPlacedMessage" class="status-message" [class.success]="placedOrderId" [class.warning]="!placedOrderId">
+  <div *ngIf="orderPlacedMessage" class="order-status-message"
+       [ngClass]="{'success': placedOrderId, 'warning': !placedOrderId}">
     {{ orderPlacedMessage }}
-    <a *ngIf="placedOrderId" [routerLink]="['/order-history']" class="link">View Order History</a>
-  </div>
-  <div *ngIf="placementError" class="status-message error">
-    {{ placementError }}
+    <a *ngIf="placedOrderId" [routerLink]="['/order-history']" class="view-history-link">View Order History</a>
   </div>
 
-  <div *ngIf="(cartItems$ | async)?.length; else emptyCartView" class="cart-details">
-    <div class="items-list">
-      <div *ngFor="let item of (cartItems$ | async); trackBy: trackByItemId" class="cart-item-row">
-        <span class="item-name">{{ item.event.name }}</span>
-        <span class="item-price">Price: {{ item.event.price | currency:'USD' }}</span>
-        <span class="item-quantity">Quantity: {{ item.quantity }}</span>
-        <span class="item-subtotal">Subtotal: {{ item.total | currency:'USD' }}</span>
-        <button (click)="cartService.removeFromCart(item.id)" class="button remove-button">Remove</button>
+  <div *ngIf="(cartItems$ | async)?.length; else emptyCart" class="cart-content">
+
+    <div class="cart-items-list">
+      <div *ngFor="let item of (cartItems$ | async); trackBy: trackByItemId" class="cart-item">
+        <div class="item-name">{{ item.name }}</div>
+        <div class="item-price">Price: {{ item.price | currency:'USD' }}</div> <div class="item-quantity">Quantity: {{ item.quantity }}</div>
+        <div class="item-subtotal">Subtotal: {{ (item.price * item.quantity) | currency:'USD' }}</div>
       </div>
     </div>
 
-    <div class="cart-summary">
-      <div class="total-amount">
+    <div class="cart-summary-actions">
+      <div class="cart-total">
         <span>Total: {{ (cartTotal$ | async) | currency:'USD' }}</span>
       </div>
-      <div class="action-buttons">
-        <button (click)="handleClearCart()" class="button clear-button" [disabled]="!(cartItems$ | async)?.length">
+      <div class="cart-buttons">
+        <button (click)="handleClearCart()" class="clear-cart-button">
           Clear Cart
         </button>
-        <button (click)="handlePlaceOrder()" class="button place-order-button" [disabled]="isPlacingOrder || !(cartItems$ | async)?.length">
-          {{ isPlacingOrder ? 'Placing...' : 'Place Order (Simulated)' }}
+        <button (click)="handlePlaceOrder()" class="place-order-button">
+          Place Order (Simulated)
         </button>
       </div>
     </div>
+
   </div>
 
-  <ng-template #emptyCartView>
-    <div class="empty-cart-info">
+  <ng-template #emptyCart>
+    <div class="empty-cart-message">
       <p>Your cart is empty.</p>
-      <button (click)="navigateTo('/')" class="button browse-button">Browse Events</button>
-      <button (click)="navigateTo('/order-history')" class="button history-button">Order History</button>
+      <button routerLink="/">Browse Events</button>
+      <button routerLink="/order-history">Order History</button>
     </div>
   </ng-template>
+
 </div>

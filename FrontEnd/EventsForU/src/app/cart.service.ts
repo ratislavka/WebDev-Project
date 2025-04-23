@@ -1,188 +1,160 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError, of, forkJoin } from 'rxjs';
-import { catchError, tap, map } from 'rxjs/operators';
-import { environment } from '../environments/environment';
-import { Event } from './event.service'; // Import Event interface
+import { BehaviorSubject, Observable } from 'rxjs';
+import { Event } from './data'; // Assuming Event interface exists
 
-// --- EXPORTED INTERFACES ---
-
-// Event interface expected within OrderItem/Ticket (ensure date is string as it comes from JSON)
-export interface NestedEvent extends Omit<Event, 'date' | 'imageUrl'> {
-  date: string; // Keep date as string within nested objects initially
-  // imageUrl is added by EventService, might not be present here
-}
-
-// Interface matching BookingItem structure from backend, used for cart items
+// Interface for items within an order
 export interface OrderItem {
-  id: number; // BookingItem ID
-  customer?: any;
-  event: NestedEvent; // Use nested event interface
-  booking_date: string; // Keep as string from JSON initially
+  eventId: number;
+  name: string;
+  price: number;
   quantity: number;
-  complete: boolean;
-  total?: number;
-  // --- Derived properties added after fetching/mapping ---
-  booking_date_obj?: Date; // Optional: Date object version
-  event_date_obj?: Date; // Optional: Date object version
 }
 
-// Interface for the structure returned by the place order endpoint
+// Interface for the entire order
 export interface Order {
-  id: number | string;
-  created_at?: string; // Keep as string from JSON initially
-  total_price?: number;
-  items?: OrderItem[];
-  // --- Derived properties ---
-  created_at_obj?: Date; // Optional: Date object version
+  id: string; // Unique order ID
+  date: Date; // Order placement timestamp
+  items: OrderItem[];
+  totalAmount: number;
 }
-
-// Interface matching Ticket structure from backend (used for order history)
-export interface Ticket {
-  id: number; // Ticket ID
-  customer: any;
-  booking_item: OrderItem; // The related BookingItem
-  status: boolean;
-  // --- Derived properties ---
-  // Dates within booking_item will be converted after fetching
-}
-
-// --- END OF INTERFACES ---
-
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
-  private apiUrl = environment.apiUrl;
-  private cartItemsSource = new BehaviorSubject<OrderItem[]>([]);
+  // Key for storing orders in local storage
+  private readonly ORDERS_STORAGE_KEY = 'eventAppOrders';
+  // Key for storing cart items (assuming you might use this too)
+  private readonly CART_STORAGE_KEY = 'eventAppCart';
 
-  items$: Observable<OrderItem[]> = this.cartItemsSource.asObservable();
-  cartTotal$: Observable<number> = this.items$.pipe(
-    map(items => items.reduce((sum, item) => sum + (item.total ?? 0), 0))
-  );
-  cartItemCount$: Observable<number> = this.items$.pipe(
-    map(items => items.reduce((sum, item) => sum + item.quantity, 0))
-  );
+  // Use BehaviorSubject to keep track of cart items
+  // Initialize with items from local storage if they exist
+  private itemsSubject = new BehaviorSubject<Event[]>(this.getCartItemsFromStorage());
+  items$: Observable<Event[]> = this.itemsSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    this.fetchCart();
+  constructor() {
+    // Optional: You could load orders here too if needed elsewhere immediately
   }
 
-  /** Fetches cart items and converts relevant dates */
-  fetchCart(): void {
-    const url = `${this.apiUrl}/cart/`;
-    this.http.get<OrderItem[]>(url).pipe( // Fetch raw OrderItem data
-      map(items => items.map(item => ({ // Convert dates after fetching
-        ...item,
-        booking_date_obj: new Date(item.booking_date), // Add Date object version
-        event: {
-          ...item.event,
-          // Keep original event.date as string, add Date object version if needed elsewhere
-          // event_date_obj: new Date(item.event.date)
-        }
-      }))),
-      tap(processedItems => {
-        console.log('Cart data received (processed):', processedItems);
-        this.cartItemsSource.next(processedItems); // Update subject with processed items
-      }),
-      catchError(err => {
-        if (err.status !== 401 && err.status !== 403) { console.error('Failed to fetch cart:', err); }
-        this.cartItemsSource.next([]);
-        return of([]);
-      })
-    ).subscribe();
-  }
+  // --- Cart Management ---
 
-  /** Adds item to cart */
-  addToCart(eventId: number, quantity: number = 1): void {
-    const url = `${this.apiUrl}/cart/`;
-    const payload = { id: eventId, quantity: quantity };
-    this.http.post<OrderItem>(url, payload).pipe(
-      tap(() => this.fetchCart()),
-      catchError(this.handleError)
-    ).subscribe({ error: (err) => alert(`Failed to add item: ${err.message}`) });
-  }
-
-  /** Removes item from cart */
-  removeFromCart(bookingItemId: number): void {
-    const url = `${this.apiUrl}/cart/${bookingItemId}/`;
-    this.http.delete<void>(url).pipe(
-      tap(() => this.fetchCart()),
-      catchError(this.handleError)
-    ).subscribe({ error: (err) => alert(`Failed to remove item: ${err.message}`) });
-  }
-
-  /** Clears cart */
-  clearCart(): void {
-    const currentItems = this.cartItemsSource.getValue();
-    if (currentItems.length === 0) return;
-    const deleteObservables = currentItems.map(item =>
-      this.http.delete<void>(`${this.apiUrl}/cart/${item.id}/`).pipe(catchError(err => of(null)))
-    );
-    forkJoin(deleteObservables).subscribe(() => this.fetchCart());
-  }
-
-  /** Placeholder for placing order */
-  placeOrder(): Observable<Order> {
-    const url = `${this.apiUrl}/orders/create/`; // Hypothetical endpoint
-    return this.http.post<Order>(url, {}).pipe(
-      map(order => ({ // Convert date after placing order
-        ...order,
-        created_at_obj: order.created_at ? new Date(order.created_at) : undefined
-      })),
-      tap(placedOrder => {
-        console.log('Order placed successfully:', placedOrder);
-        this.fetchCart();
-      }),
-      catchError(err => {
-        const message = err.status === 404 ? 'Order placement endpoint not found on backend.' : 'Failed to place order.';
-        return throwError(() => new Error(message));
-      })
-    );
-  }
-
-  /** Fetches order history (Tickets) and converts dates */
-  getOrderHistory(): Observable<Ticket[]> {
-    const url = `${this.apiUrl}/tickets/`;
-    return this.http.get<Ticket[]>(url).pipe( // Fetch directly as Ticket[]
-      map(tickets => tickets.map(ticket => ({ // Convert dates within tickets
-        ...ticket,
-        booking_item: {
-          ...ticket.booking_item,
-          // Add Date object versions
-          booking_date_obj: new Date(ticket.booking_item.booking_date),
-          event: {
-            ...ticket.booking_item.event,
-            // Add Date object version
-            // event_date_obj: new Date(ticket.booking_item.event.date)
-          }
-        }
-      }))),
-      catchError(this.handleError)
-    );
-  }
-
-  /** Basic error handler */
-  private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'An unknown error occurred!';
-    // --- FIX: Declare backendMessage before using it ---
-    let backendMessage = '';
-    // --- End Fix ---
-    if (error.error instanceof ErrorEvent) {
-      errorMessage = `Network error: ${error.error.message}`;
-    } else {
-      if (error.error) {
-        if (typeof error.error === 'string') {
-          backendMessage = error.error;
-        } else if (typeof error.error === 'object') {
-          backendMessage = error.error.detail || error.error.error || JSON.stringify(error.error);
-        }
-      }
-      errorMessage = `Backend Error (Status ${error.status}): ${backendMessage || error.message}`;
+  private getCartItemsFromStorage(): Event[] {
+    try {
+      const itemsJson = localStorage.getItem(this.CART_STORAGE_KEY);
+      return itemsJson ? JSON.parse(itemsJson) : [];
+    } catch (e) {
+      console.error("Error reading cart items from local storage", e);
+      return [];
     }
-    console.error('ApiService Error:', errorMessage);
-    // Use the extracted backendMessage if available
-    return throwError(() => new Error(`Operation failed: ${backendMessage || 'Please try again later.'}`));
+  }
+
+  private saveCartItemsToStorage(items: Event[]): void {
+    try {
+      localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(items));
+    } catch (e) {
+      console.error("Error saving cart items to local storage", e);
+    }
+  }
+
+  addToCart(event: Event): void {
+    const currentItems = this.itemsSubject.getValue();
+    // Basic add - assumes 1 quantity per add click.
+    // You might want quantity logic here if not already implemented.
+    const updatedItems = [...currentItems, event];
+    this.itemsSubject.next(updatedItems);
+    this.saveCartItemsToStorage(updatedItems); // Save cart to storage
+  }
+
+  getItems(): Event[] {
+    return this.itemsSubject.getValue();
+  }
+
+  // Method to get items grouped with quantity (useful for cart display and order)
+  getGroupedCartItems(): OrderItem[] {
+    const items = this.getItems();
+    const grouped: { [key: number]: OrderItem } = {};
+
+    items.forEach(item => {
+      if (grouped[item.id]) {
+        grouped[item.id].quantity++;
+      } else {
+        grouped[item.id] = {
+          eventId: item.id,
+          name: item.name,
+          price: item.price || 0, // Assuming price exists, add default if needed
+          quantity: 1
+        };
+      }
+    });
+    return Object.values(grouped);
+  }
+
+  getCartTotal(): number {
+    return this.getGroupedCartItems().reduce((total, item) => total + (item.price * item.quantity), 0);
+  }
+
+  clearCart(): void {
+    this.itemsSubject.next([]);
+    localStorage.removeItem(this.CART_STORAGE_KEY); // Clear cart from storage
+  }
+
+  // --- Order Management ---
+
+  private getOrdersFromStorage(): Order[] {
+    try {
+      const ordersJson = localStorage.getItem(this.ORDERS_STORAGE_KEY);
+      if (ordersJson) {
+        // Need to parse dates correctly
+        const parsedOrders = JSON.parse(ordersJson);
+        return parsedOrders.map((order: any) => ({
+          ...order,
+          date: new Date(order.date) // Convert string date back to Date object
+        }));
+      }
+      return [];
+    } catch (e) {
+      console.error("Error reading orders from local storage", e);
+      return [];
+    }
+  }
+
+  private saveOrdersToStorage(orders: Order[]): void {
+    try {
+      localStorage.setItem(this.ORDERS_STORAGE_KEY, JSON.stringify(orders));
+    } catch (e) {
+      console.error("Error saving orders to local storage", e);
+    }
+  }
+
+  // Method to place a new order
+  placeOrder(): Order | null {
+    const cartItems = this.getGroupedCartItems();
+    if (cartItems.length === 0) {
+      console.warn("Cannot place an empty order.");
+      return null; // Or throw an error
+    }
+
+    const newOrder: Order = {
+      id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`, // Simple unique ID
+      date: new Date(),
+      items: cartItems,
+      totalAmount: this.getCartTotal()
+    };
+
+    // Retrieve existing orders, add the new one, and save back
+    const allOrders = this.getOrdersFromStorage();
+    allOrders.push(newOrder);
+    this.saveOrdersToStorage(allOrders);
+
+    // Clear the cart after placing the order
+    this.clearCart();
+
+    console.log('Order placed:', newOrder); // For debugging
+    return newOrder;
+  }
+
+  // Method to retrieve all past orders
+  getOrderHistory(): Order[] {
+    return this.getOrdersFromStorage();
   }
 }

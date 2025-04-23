@@ -69,13 +69,8 @@ export class EventListComponent implements OnInit, OnChanges { // Implement OnCh
   }
 
 
-  addToCart(event: Event): void { // Method receives the specific event object
-    if (event && event.id) { // Check if event and event.id exist
-      // Pass only the event ID (number)
-      this.cartService.addToCart(event.id, 1); // Add 1 quantity
-      alert(`${event.name} added to cart!`); // Simple feedback
-    } else {
-      console.error("Cannot add to cart, invalid event data or ID.");
-    }
+  addToCart(event: Event): void {
+    this.cartService.addToCart(event);
+    alert(`${event.name} has been added to your cart.`);
   }
 }
