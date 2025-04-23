@@ -1,4 +1,4 @@
-{% extends "main/base.html" %}
+{% comment %} {% extends "base.html" %}
 
 {% block title %}
 Login here
@@ -11,4 +11,4 @@ Login here
     {% csrf_token %}
     {{form|crispy}}
 </form>
-{% endblock%}
+{% endblock content %} {% endcomment %}
