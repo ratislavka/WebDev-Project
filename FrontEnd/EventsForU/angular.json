@@ -45,12 +45,21 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              // --- THIS SECTION IS ADDED ---
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
+              // --- END OF ADDED SECTION ---
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+              // No file replacement needed for development
             }
           },
           "defaultConfiguration": "production"
