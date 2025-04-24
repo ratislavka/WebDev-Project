@@ -105,9 +105,9 @@ export class EventBrowserComponent implements OnInit { // Implement OnInit
     if (this.searchTerm && this.searchTerm.trim() !== '') {
       const lowerCaseSearchTerm = this.searchTerm.toLowerCase().trim();
       events = events.filter(e =>
-        // Search in name and location (matches backend fields)
-        e.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-        e.location.toLowerCase().includes(lowerCaseSearchTerm)
+          // Search in name and location (matches backend fields)
+          e.name.toLowerCase().includes(lowerCaseSearchTerm) ||
+          e.location.toLowerCase().includes(lowerCaseSearchTerm)
       );
     }
 

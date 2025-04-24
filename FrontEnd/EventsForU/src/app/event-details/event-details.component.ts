@@ -2,6 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common'; // Keep CommonModule for *ngIf etc.
+
 import { EventService } from '../event.service'; // Import the service
 import { CartService } from '../cart.service'; // Keep CartService import
 import { Event } from '../models/event.model'; // <-- CORRECT Import for the new model
@@ -18,9 +19,9 @@ export class EventDetailsComponent implements OnInit {
   isLoading: boolean = true; // Optional loading indicator
 
   constructor(
-    private route: ActivatedRoute,
-    private cartService: CartService,
-    private eventService: EventService // Inject EventService
+      private route: ActivatedRoute,
+      private cartService: CartService,
+      private eventService: EventService // Inject EventService
   ) {}
 
   ngOnInit(): void {

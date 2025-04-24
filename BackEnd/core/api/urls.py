@@ -10,13 +10,5 @@ router.register('cart', views.CartViewSet, basename='cart')
 
 urlpatterns = [
     path('', include(router.urls)),
-<<<<<<< Updated upstream
-    path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('refresh/', CustomRefreshTokenView.as_view(), name='token_refresh'),
-    path('logout/', views.LogoutViewSet.as_view(), name='logout'),
-    path('is_authenticated/', is_authenticated),
-    path('api/', include(router.urls)),
-=======
     path("tickets/", get_tickets),
->>>>>>> Stashed changes
 ]

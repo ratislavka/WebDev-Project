@@ -1,12 +1,12 @@
-// eventsforu/frontend/src/app/models/event.model.ts
-
+// Example: eventsforu/frontend/src/app/models/event.model.ts
 export interface Event {
-  id: number;          // From EventSerializer
-  name: string;        // From EventSerializer
-  location: string;    // From EventSerializer
-  date: string;        // From EventSerializer (DateField becomes string)
-  duration: number;    // From EventSerializer (FloatField maps to number)
-  genre: string;       // From EventSerializer
-  price: number;       // From EventSerializer (IntegerField maps to number)
-  image: string | null;// From EventSerializer (ImageField becomes URL string or null)
+    id: number;
+    name: string;
+    location: string; // Matches backend model
+    date: string;     // Or Date, depending on how Django serializes it
+    duration: number; // Matches backend model
+    genre: string;    // Matches backend model
+    price: number;    // Matches backend model
+    image: string | null; // Matches backend model
+    // Add any other fields returned by your serializer
 }

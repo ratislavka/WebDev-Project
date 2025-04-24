@@ -1,8 +1,11 @@
+// eventsforu/frontend/src/app/cart.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Event } from './models/event.model';
+// Use the new Event model for type consistency going forward
+import { Event } from './models/event.model'; // <--- Change this import
 
-// Interface for items within an order
+// Keep OrderItem and Order as they define the structure for orders/cart display
+// If these also relied heavily on fields only in the old Event model, they might need adjustment too.
 export interface OrderItem {
   eventId: number;
   name: string;
@@ -12,34 +15,34 @@ export interface OrderItem {
   // e.g., maybe location instead of description?
   location?: string; // Example: Add location if needed in cart/order display
 }
-// Interface for the entire order
+
 export interface Order {
-  id: string; // Unique order ID
-  date: Date; // Order placement timestamp
+  id: string;
+  date: Date;
   items: OrderItem[];
   totalAmount: number;
 }
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
-  // Key for storing orders in local storage
   private readonly ORDERS_STORAGE_KEY = 'eventAppOrders';
-  // Key for storing cart items (assuming you might use this too)
   private readonly CART_STORAGE_KEY = 'eventAppCart';
 
-  // Use BehaviorSubject to keep track of cart items
-  // Initialize with items from local storage if they exist
+  // IMPORTANT: The items stored in localStorage via CART_STORAGE_KEY
+  // are likely still in the OLD Event format from data.ts based on the previous code.
+  // This BehaviorSubject will load OLD data initially.
+  // We need a strategy to migrate or handle this discrepancy later.
   private itemsSubject = new BehaviorSubject<any[]>(this.getCartItemsFromStorage()); // Use any[] temporarily
   items$: Observable<any[]> = this.itemsSubject.asObservable();
 
-  constructor() {
-    // Optional: You could load orders here too if needed elsewhere immediately
-  }
+  constructor() {}
 
   // --- Cart Management ---
 
+  // This retrieves potentially OLD format items from storage
   private getCartItemsFromStorage(): any[] { // Use any[] temporarily
     try {
       const itemsJson = localStorage.getItem(this.CART_STORAGE_KEY);
@@ -51,6 +54,7 @@ export class CartService {
     }
   }
 
+  // This saves items (potentially mixed format now) back to storage
   private saveCartItemsToStorage(items: any[]): void { // Use any[] temporarily
     try {
       localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(items));
@@ -59,6 +63,7 @@ export class CartService {
     }
   }
 
+  // Modify addToCart to accept the NEW Event type
   addToCart(event: Event): void { // <--- Accepts NEW Event type
     const currentItems = this.itemsSubject.getValue();
     // Add the new event object directly.
@@ -69,11 +74,9 @@ export class CartService {
     this.saveCartItemsToStorage(updatedItems);
   }
 
-  getItems(): Event[] {
-    return this.itemsSubject.getValue();
-  }
-
-  // Method to get items grouped with quantity (useful for cart display and order)
+  // This method might break or give unexpected results if itemsSubject contains
+  // a mix of old/new structures, or if the required properties (id, name, price)
+  // differ significantly.
   getGroupedCartItems(): OrderItem[] {
     const items = this.itemsSubject.getValue(); // Contains potentially mixed items
     const grouped: { [key: number]: OrderItem } = {};
@@ -99,6 +102,7 @@ export class CartService {
     return Object.values(grouped);
   }
 
+
   getCartTotal(): number {
     // This relies on getGroupedCartItems working correctly
     return this.getGroupedCartItems().reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -109,7 +113,7 @@ export class CartService {
     localStorage.removeItem(this.CART_STORAGE_KEY);
   }
 
-  // --- Order Management ---
+  // --- Order Management --- (Methods below likely need review too)
 
   private getOrdersFromStorage(): Order[] {
     // This assumes saved orders used the Order/OrderItem structure defined above.
@@ -139,7 +143,6 @@ export class CartService {
     }
   }
 
-  // Method to place a new order
   placeOrder(): Order | null {
     // This relies on getGroupedCartItems and getCartTotal working correctly
     const cartItems = this.getGroupedCartItems();
@@ -164,7 +167,6 @@ export class CartService {
     return newOrder;
   }
 
-  // Method to retrieve all past orders
   getOrderHistory(): Order[] {
     return this.getOrdersFromStorage();
   }

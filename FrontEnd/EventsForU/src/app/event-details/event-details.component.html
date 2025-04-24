@@ -1,18 +1,18 @@
 <div *ngIf="isLoading">
-  <p>Loading event details...</p>
+    <p>Loading event details...</p>
 </div>
 
 <div *ngIf="!isLoading && event; else noEvent">
-  <h2>{{ event.name }}</h2>
-  <img [src]="event.image || 'path/to/default-image.png'" alt="{{ event.name }}"> <p><strong>Location:</strong> {{ event.location }}</p>
-  <p><strong>Date:</strong> {{ event.date | date:'fullDate' }}</p> <p><strong>Timezone Note:</strong> Date might be displayed in local timezone.</p>
-  <p><strong>Duration:</strong> {{ event.duration }} hours</p> <p><strong>Genre:</strong> {{ event.genre }}</p>
-  <p><strong>Price:</strong> {{ event.price | currency:'USD' }}</p>
+    <h2>{{ event.name }}</h2>
+    <img [src]="event.image || 'path/to/default-image.png'" alt="{{ event.name }}"> <p><strong>Location:</strong> {{ event.location }}</p>
+    <p><strong>Date:</strong> {{ event.date | date:'fullDate' }}</p> <p><strong>Timezone Note:</strong> Date might be displayed in local timezone.</p>
+    <p><strong>Duration:</strong> {{ event.duration }} hours</p> <p><strong>Genre:</strong> {{ event.genre }}</p>
+    <p><strong>Price:</strong> {{ event.price | currency:'USD' }}</p>
 
-  <button (click)="addToCart()">Add to Cart</button>
+    <button (click)="addToCart()">Add to Cart</button>
 </div>
 
 <ng-template #noEvent>
-  <div *ngIf="!isLoading"> <p>Event not found or could not be loaded.</p>
-  </div>
+    <div *ngIf="!isLoading"> <p>Event not found or could not be loaded.</p>
+    </div>
 </ng-template>

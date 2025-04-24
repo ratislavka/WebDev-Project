@@ -46,7 +46,6 @@ export class EventListComponent implements OnInit, OnChanges {
     }
     this.applySort();
   }
-
 // In eventsforu/frontend/src/app/event-list/event-list.component.ts
 // Inside the EventListComponent class
 
