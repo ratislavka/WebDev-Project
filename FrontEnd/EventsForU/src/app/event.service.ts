@@ -32,6 +32,6 @@ export class EventService {
      * @returns An Observable containing the single Event object.
      */
     getEventById(id: number): Observable<Event> {
-        return this.http.get<Event>(`<span class="math-inline">\{this\.apiUrl\}events/</span>{id}/`);
+        return this.http.get<Event>(`${this.apiUrl}events/${id}/`);
     }
 }
