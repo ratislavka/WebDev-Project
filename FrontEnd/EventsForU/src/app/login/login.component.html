@@ -1,23 +1,22 @@
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-  <div>
-    <label>Email:</label>
-    <input type="email" formControlName="email" />
-    <div *ngIf="submitted && f['email'].errors" class="error">
-      <span *ngIf="f['email'].errors['required']">Email is required.</span>
-      <span *ngIf="f['email'].errors['email']">Invalid email format.</span>
+    <div>
+        <label>Username:</label> <input type="text" formControlName="username" /> <div *ngIf="submitted && f['username'].errors" class="error">
+        <span *ngIf="f['username'].errors['required']">Username is required.</span>
     </div>
-  </div>
-
-  <div>
-    <label>Password:</label>
-    <input type="password" formControlName="password" />
-    <div *ngIf="submitted && f['password'].errors" class="error">
-      <span *ngIf="f['password'].errors['required']">Password is required.</span>
-      <span *ngIf="f['password'].errors['minlength']">Password must be at least 6 characters.</span>
     </div>
-  </div>
 
-  <p *ngIf="loginError" style="color: red;">{{ loginError }}</p>
+    <div>
+        <label>Password:</label>
+        <input type="password" formControlName="password" />
+        <div *ngIf="submitted && f['password'].errors" class="error">
+            <span *ngIf="f['password'].errors['required']">Password is required.</span>
+            <span *ngIf="f['password'].errors['minlength']">Password must be at least 6 characters.</span>
+        </div>
+    </div>
 
-  <button type="submit">Login</button>
+    <p *ngIf="loginError" style="color: red;">{{ loginError }}</p>
+
+    <button type="submit" [disabled]="isLoading">
+        {{ isLoading ? 'Logging in...' : 'Login' }}
+    </button>
 </form>
