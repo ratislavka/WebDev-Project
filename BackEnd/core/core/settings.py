@@ -138,3 +138,5 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # Allow cookies to be sent with cross-origin requests (important for authentication)
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_COOKIE_HTTPONLY = False

@@ -11,6 +11,7 @@ export interface LoginResponse {
 }
 
 // Helper function to get a cookie by name (can be outside the class)
+
 function getCookie(name: string): string | null {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {

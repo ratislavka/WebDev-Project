@@ -87,8 +87,15 @@ export class EventListComponent implements OnInit, OnChanges {
   // This function might need adjustment later depending on how
   // CartService is updated (if it also needs the new Event model).
   addToCart(event: Event): void {
+    // We now expect the service to handle errors internally (like CSRF)
+    // and potentially not even proceed. The component doesn't need to
+    // assume success immediately. For now, we keep the alert simple.
+    // A better approach involves the service returning status/observable.
     this.cartService.addToCart(event);
-    // Consider providing more feedback or using a snackbar component
-    alert(`${event.name} has been added to your cart.`);
+
+    // Consider moving this alert to be shown *after* confirmation
+    // from the service that the item was *actually* added (requires service changes).
+    // For now, it remains immediate but potentially misleading if service fails silently.
+    alert(`${event.name} has been added to your cart request sent.`); // Clarify alert
   }
 }

@@ -31,7 +31,7 @@ class UserRegistrationView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Set login and password
-class CustomerTokenObtainPairView(TokenObtainPairView):  
+class CustomerTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *agrs, **kwargs):
         try:
             response = super().post(request, *agrs, **kwargs)
@@ -46,19 +46,20 @@ class CustomerTokenObtainPairView(TokenObtainPairView):
 
             res.set_cookie(
                 key="access_token",
-                value=access_token, 
+                value=access_token,
                 httponly=True,
-                secure=True,
-                samesite='None',
+                # secure=True,      # REMOVE or set to False for HTTP localhost
+                # samesite='None',  # CHANGE for HTTP localhost
+                samesite='Lax',  # Use Lax for localhost dev
                 path='/'
             )
-
             res.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
                 httponly=True,
-                secure=True,
-                samesite='None',
+                # secure=True,      # REMOVE or set to False for HTTP localhost
+                # samesite='None',  # CHANGE for HTTP localhost
+                samesite='Lax',  # Use Lax for localhost dev
                 path='/'
             )
 
@@ -85,11 +86,12 @@ class CustomerRefreshTokenView(TokenRefreshView):
             res.data = {'refreshed': True}
 
             res.set_cookie(
-                key="access_token", 
+                key="access_token",
                 value=access_token,
-                httponly=True, 
-                secure=True,
-                samesite='None',
+                httponly=True,
+                # secure=True,      # REMOVE or set to False for HTTP localhost
+                # samesite='None',  # CHANGE for HTTP localhost
+                samesite='Lax',  # Use Lax for localhost dev
                 path='/'
             )
 

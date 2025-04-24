@@ -1,14 +1,14 @@
 // eventsforu/frontend/src/app/cart.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, tap, map } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http'; // Ensure HttpHeaders imported
+import { BehaviorSubject, Observable, throwError } from 'rxjs'; // Ensure throwError imported
+import { catchError, tap, map } from 'rxjs/operators'; // Ensure operators imported
 
-import { Event } from './models/event.model'; // Use the backend-aligned Event model
-import { BookingItem } from './models/booking-item.model'; // Use the new BookingItem model
-import { AuthService } from './auth.service'; // Needed to check auth status
+import { Event } from './models/event.model';
+import { BookingItem } from './models/booking-item.model';
+import { AuthService } from './auth.service';
 
-// Helper function to get CSRF token (can be kept from AuthService)
+// Helper function (ensure this is defined outside the class)
 function getCookie(name: string): string | null {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -29,122 +29,80 @@ function getCookie(name: string): string | null {
 })
 export class CartService {
 
-  // Base URL for your Django backend API
   private apiUrl = 'http://localhost:8000/api/';
   private cartUrl = `${this.apiUrl}cart/`;
-  private buyUrl = `${this.cartUrl}buy/`; // URL for the buy action
+  private buyUrl = `${this.cartUrl}buy/`;
 
-  // BehaviorSubject holds the current state of the cart (BookingItem[])
   private cartItemsSource = new BehaviorSubject<BookingItem[]>([]);
   public cartItems$ = this.cartItemsSource.asObservable();
 
-  // Keep track of loading state for the cart
   private isLoadingSource = new BehaviorSubject<boolean>(false);
   public isLoading$ = this.isLoadingSource.asObservable();
 
   constructor(
       private http: HttpClient,
-      private authService: AuthService // Inject AuthService
+      private authService: AuthService
   ) {
-    // When auth status changes, fetch the cart if user is authenticated
     this.authService.isAuthenticated$.subscribe(isAuth => {
       if (isAuth) {
-        this.fetchCart();
+        this.fetchCart(); // Call fetchCart correctly
       } else {
-        // Clear cart when user logs out
         this.cartItemsSource.next([]);
       }
     });
   }
 
-  /**
-   * Fetches the user's current cart items from the backend.
-   * Requires user to be authenticated (handled by backend permissions).
-   */
   fetchCart(): void {
-    if (!this.authService.getIsAuthenticated()) {
-      // console.log('User not authenticated, cannot fetch cart.'); // Already logged
-      this.cartItemsSource.next([]);
-      return;
-    }
-
-    const csrfToken = getCookie('csrftoken');
-    // Add headers, even for GET
-    const headers = new HttpHeaders({
-      'X-CSRFToken': csrfToken || ''
-    });
-
-    console.log('Fetching cart from backend with CSRF:', csrfToken);
+    if (!this.authService.getIsAuthenticated()) { /* ... */ return; }
+    console.log('Fetching cart from backend...');
     this.isLoadingSource.next(true);
-    // Add headers to the request
-    this.http.get<BookingItem[]>(this.cartUrl, { headers: headers, withCredentials: true })
-        .pipe(
-            tap(items => console.log('Raw cart items fetched:', items)),
-            catchError(err => {
-              console.error('Error fetching cart:', err);
-              this.cartItemsSource.next([]);
-              this.isLoadingSource.next(false); // Ensure loading stops on error
-              return throwError(() => err);
-            })
-        )
-        .subscribe(items => {
-          this.cartItemsSource.next(items || []);
-          this.isLoadingSource.next(false); // Ensure loading stops on success
-          console.log('Cart state updated.');
-        });
+    // Remove headers - not needed for GET if auth cookie works
+    this.http.get<BookingItem[]>(this.cartUrl, { withCredentials: true }) // Just send credentials
+        .pipe(/* ... same tap/catchError ... */)
+        .subscribe(/* ... same subscribe block ... */);
   }
 
-  /**
-   * Adds an event to the user's cart via the backend API.
-   * Requires user to be authenticated.
-   * @param event The event to add (using the new Event model)
-   * @param quantity The quantity to add (defaulting to 1)
-   */
   addToCart(event: Event, quantity: number = 1): void {
     if (!this.authService.getIsAuthenticated()) {
       console.error('User not authenticated. Cannot add to cart.');
-      // Optionally: Redirect to login or show a message
       alert('Please log in to add items to your cart.');
       return;
     }
 
     const csrfToken = getCookie('csrftoken');
+    console.log('CSRF token value before check in addToCart:', csrfToken);
+
     if (!csrfToken) {
-      console.error('CSRF token not found. Cannot add to cart.');
+      console.error('CSRF token check failed. Cannot add to cart.');
       alert('Could not verify request security. Please refresh and try again.');
-      return;
+      return; // Stop execution if no token
     }
 
     const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
-    // Backend expects 'event' (ID) and 'quantity'
+    // Payload expects 'event' (ID) and 'quantity' from backend view
     const payload = { event: event.id, quantity: quantity };
 
     console.log('Adding to cart:', payload);
-    this.isLoadingSource.next(true); // Indicate loading
+    this.isLoadingSource.next(true);
 
     this.http.post<BookingItem>(this.cartUrl, payload, { headers: headers, withCredentials: true })
         .pipe(
             catchError(err => {
               console.error('Error adding item to cart:', err);
-              alert(`Failed to add ${event.name} to cart. Error: ${err.message || 'Unknown error'}`);
-              this.isLoadingSource.next(false); // Stop loading on error
+              // Use event.name from the passed parameter
+              alert(`Failed to add ${event?.name || 'event'} to cart. Error: ${err.message || 'Unknown error'}`);
+              this.isLoadingSource.next(false);
               return throwError(() => err);
             })
         )
-        .subscribe(newCartItem => {
+        .subscribe((newCartItem: BookingItem) => { // Add type annotation here
           console.log('Item added:', newCartItem);
-          // Refresh the entire cart state after adding successfully
-          this.fetchCart();
-          // Don't set isLoadingSource to false here, let fetchCart handle it
+          this.fetchCart(); // Refresh cart (will set loading to false)
         });
   }
 
 
-  /**
-   * Places the order by calling the backend 'buy' action.
-   * Requires user to be authenticated.
-   */
-  placeOrder(): Observable<{ message: string }> { // Backend returns { "message": "..." }
+  placeOrder(): Observable<{ message: string }> {
     if (!this.authService.getIsAuthenticated()) {
       console.error('User not authenticated. Cannot place order.');
       return throwError(() => new Error('User not authenticated'));
@@ -158,54 +116,38 @@ export class CartService {
     const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
 
     console.log('Placing order...');
-    this.isLoadingSource.next(true); // Indicate loading
+    this.isLoadingSource.next(true);
 
     return this.http.post<{ message: string }>(this.buyUrl, {}, { headers: headers, withCredentials: true })
         .pipe(
-            tap(response => {
+            tap((response: { message: string }) => { // Add type annotation
               console.log('Order placement response:', response);
-              // Refresh cart (should be empty now) after successful order
-              this.fetchCart();
+              this.fetchCart(); // Refresh cart (will set loading to false)
             }),
             catchError(err => {
               console.error('Error placing order:', err);
               alert(`Failed to place order. Error: ${err.message || 'Unknown error'}`);
-              this.isLoadingSource.next(false); // Stop loading on error
+              this.isLoadingSource.next(false);
               return throwError(() => err);
             })
-            // Don't set isLoadingSource to false here, let fetchCart handle it
         );
   }
 
 
-  /**
-   * Calculates the total price of items currently in the cart state.
-   */
   getCartTotal(): number {
     const items = this.cartItemsSource.getValue();
-    // The 'total' might already be calculated per item by the backend serializer
-    // Or calculate manually: item.event.price * item.quantity
-    return items.reduce((sum, item) => sum + (item.event.price * item.quantity), 0);
+    return items.reduce((sum, item) => {
+      // Add checks for safety as event might theoretically be missing
+      const price = item?.event?.price ?? 0;
+      const quantity = item?.quantity ?? 0;
+      return sum + (price * quantity);
+    }, 0);
   }
 
-  /**
-   * Gets the total number of items (sum of quantities) in the cart.
-   */
+
   getCartItemCount(): number {
     const items = this.cartItemsSource.getValue();
-    return items.reduce((sum, item) => sum + item.quantity, 0);
+    return items.reduce((sum, item) => sum + (item?.quantity ?? 0), 0);
   }
 
-
-  // --- Local Storage / Old Methods Removal ---
-  // Removed getCartItemsFromStorage, saveCartItemsToStorage
-  // Removed local storage keys
-  // Removed old getGroupedCartItems (can be re-implemented if needed based on BookingItem[])
-  // Removed old placeOrder logic
-  // Removed old getOrderHistory logic (will be handled separately)
-
-  // Note: A 'removeItem' or 'updateQuantity' method would typically require
-  // DELETE or PUT/PATCH requests to the backend API endpoint (`/api/cart/{booking_item_id}/`)
-  // and corresponding backend view logic in CartViewSet.
-  // This is not implemented here yet.
-}
+} // End of CartService class

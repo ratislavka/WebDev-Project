@@ -1,58 +1,61 @@
 <div class="event-browser-page">
-  <h2 class="page-title">Browse Events</h2>
+    <h2 class="page-title">Browse Events</h2>
 
-  <div class="controls-container">
-    <h3 class="controls-title">Filter & Search Events</h3>
+    <div *ngIf="isLoading">Loading events...</div>
 
-    <div class="search-section">
-      <label for="search-input" class="control-label">Search by Name or Place:</label>
-      <input
-        type="text"
-        id="search-input"
-        [(ngModel)]="searchTerm"
-        placeholder="Enter search term..."
-        class="search-input-field"
-      />
-    </div>
+    <div class="controls-container" *ngIf="!isLoading">
+        <h3 class="controls-title">Filter & Search Events</h3>
 
-    <div class="filter-section">
-      <label class="control-label">By Category:</label>
-      <div class="button-group">
-        <button (click)="selectCategory(null)"
-                class="filter-button"
-                [class.active]="selectedCategory === null">
-          All Categories
-        </button>
-        <button *ngFor="let category of availableCategories"
-                (click)="selectCategory(category)"
-                class="filter-button"
-                [class.active]="selectedCategory === category">
-          {{ category }} </button>
-      </div>
-    </div>
+        <div class="search-section">
+            <label for="search-input" class="control-label">Search by Name or Place:</label>
+            <input
+                    type="text"
+                    id="search-input"
+                    [(ngModel)]="searchTerm" placeholder="Enter search term..."
+                    class="search-input-field"
+            />
+        </div>
 
-    <div class="filter-section">
-      <label class="control-label">By Date:</label>
-      <div class="button-group">
-        <button (click)="selectDate(null)"
-                class="filter-button"
-                [class.active]="selectedDate === null">
-          All Dates
-        </button>
-        <button *ngFor="let date of availableDates"
-                (click)="selectDate(date)"
-                class="filter-button"
-                [class.active]="selectedDate === date">
-          {{ date }} </button>
-      </div>
-    </div>
+        <div class="filter-section">
+            <label class="control-label">By Genre:</label>
+            <div class="button-group">
+                <button (click)="selectGenre(null)"
+                        class="filter-button"
+                        [class.active]="selectedGenre === null">
+                    All Genres
+                </button>
+                <button *ngFor="let genre of availableGenres"
+                        (click)="selectGenre(genre)"
+                        class="filter-button"
+                        [class.active]="selectedGenre === genre">
+                    {{ genre }}
+                </button>
+            </div>
+        </div>
 
-    <div class="reset-section">
-      <button (click)="resetFilters()" class="button reset-button">
-        Reset All Filters
-      </button>
-    </div>
+        <div class="filter-section">
+            <label class="control-label">By Date:</label>
+            <div class="button-group">
+                <button (click)="selectDate(null)"
+                        class="filter-button"
+                        [class.active]="selectedDate === null">
+                    All Dates
+                </button>
+                <button *ngFor="let date of availableDates"
+                        (click)="selectDate(date)"
+                        class="filter-button"
+                        [class.active]="selectedDate === date">
+                    {{ date | date:'mediumDate' }}
+                </button>
+            </div>
+        </div>
 
-  </div> <app-event-list [eventsToShow]="filteredEvents"></app-event-list>
+        <div class="reset-section">
+            <button (click)="resetFilters()" class="button reset-button">
+                Reset All Filters
+            </button>
+        </div>
+
+    </div> <app-event-list *ngIf="!isLoading" [eventsToShow]="filteredEvents"></app-event-list>
 
 </div>
