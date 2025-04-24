@@ -1,30 +1,43 @@
 <div class="order-history-page">
-  <h2 class="page-title">Your Order History</h2>
+    <h2 class="page-title">Your Order History</h2>
 
-  <div *ngIf="isLoading" class="loading-indicator">
-    <p>Loading order history...</p>
-  </div>
+    <div *ngIf="isLoading" class="loading-indicator">
+        <p>Loading order history...</p>
+    </div>
 
-  <div *ngIf="!isLoading && orders.length > 0" class="orders-list-container">
-    <div *ngFor="let order of orders; trackBy: trackByOrderId" class="order-summary-card">
-      <div class="order-summary-header">
-        <span>Order ID: {{ order.id }}</span>
-        <span>Date: {{ order.date | date:'medium' }}</span>
-        <span>Total: {{ order.totalAmount | currency:'USD' }}</span>
-      </div>
+    <div *ngIf="errorMessage && !isLoading" class="error-message">
+        <p>{{ errorMessage }}</p>
+    </div>
 
-      <div class="order-items-details">
-        <h4 class="items-list-title">Items:</h4>
-        <div class="items-list">
-          <div *ngFor="let item of order.items" class="order-item-row">
-            <span class="item-name">{{ item.name }}</span>
-            <span class="item-quantity-price">({{ item.quantity }} x {{ item.price | currency:'USD' }})</span>
-            <span class="item-row-subtotal">Subtotal: {{ (item.price * item.quantity) | currency:'USD' }}</span>
-          </div>
-        </div>
-      </div>
-    </div> </div> <div *ngIf="!isLoading && orders.length === 0" class="no-orders-info">
-  <p>You haven't placed any orders yet.</p>
-</div>
+    <div *ngIf="!isLoading && !errorMessage">
+        <div *ngIf="orderHistory.length > 0; else noOrders" class="orders-list-container">
+            <div *ngFor="let ticket of orderHistory; trackBy: trackByTicketId" class="order-summary-card">
 
-</div>
+                <div class="order-summary-header">
+                    <span>Event: {{ ticket.booking_item.event.name }}</span>
+                    <span>Location: {{ ticket.booking_item.event.location }}</span>
+                    <span>Date Purchased: {{ ticket.booking_item.booking_date | date:'medium' }}</span> </div>
+
+                <div class="order-items-details">
+                    <h4 class="items-list-title">Ticket Details:</h4>
+                    <div class="items-list">
+                        <div class="order-item-row">
+                            <span class="item-name">Event Date: {{ ticket.booking_item.event.date | date:'longDate' }}</span>
+                            <span class="item-quantity-price">
+                    ({{ ticket.booking_item.quantity }} x {{ ticket.booking_item.event.price | currency:'USD' }})
+                </span>
+                            <span class="item-row-subtotal">
+                    Subtotal: {{ (ticket.booking_item.event.price * ticket.booking_item.quantity) | currency:'USD' }}
+                </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div> </div>
+
+        <ng-template #noOrders>
+            <div class="no-orders-info">
+                <p>You haven't placed any orders yet.</p>
+            </div>
+        </ng-template>
+    </div> </div>

@@ -1,173 +1,211 @@
 // eventsforu/frontend/src/app/cart.service.ts
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-// Use the new Event model for type consistency going forward
-import { Event } from './models/event.model'; // <--- Change this import
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, tap, map } from 'rxjs/operators';
 
-// Keep OrderItem and Order as they define the structure for orders/cart display
-// If these also relied heavily on fields only in the old Event model, they might need adjustment too.
-export interface OrderItem {
-  eventId: number;
-  name: string;
-  price: number;
-  quantity: number;
-  // Add/remove properties if needed based on the new Event model
-  // e.g., maybe location instead of description?
-  location?: string; // Example: Add location if needed in cart/order display
+import { Event } from './models/event.model'; // Use the backend-aligned Event model
+import { BookingItem } from './models/booking-item.model'; // Use the new BookingItem model
+import { AuthService } from './auth.service'; // Needed to check auth status
+
+// Helper function to get CSRF token (can be kept from AuthService)
+function getCookie(name: string): string | null {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
 }
-
-export interface Order {
-  id: string;
-  date: Date;
-  items: OrderItem[];
-  totalAmount: number;
-}
-
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
-  private readonly ORDERS_STORAGE_KEY = 'eventAppOrders';
-  private readonly CART_STORAGE_KEY = 'eventAppCart';
 
-  // IMPORTANT: The items stored in localStorage via CART_STORAGE_KEY
-  // are likely still in the OLD Event format from data.ts based on the previous code.
-  // This BehaviorSubject will load OLD data initially.
-  // We need a strategy to migrate or handle this discrepancy later.
-  private itemsSubject = new BehaviorSubject<any[]>(this.getCartItemsFromStorage()); // Use any[] temporarily
-  items$: Observable<any[]> = this.itemsSubject.asObservable();
+  // Base URL for your Django backend API
+  private apiUrl = 'http://localhost:8000/api/';
+  private cartUrl = `${this.apiUrl}cart/`;
+  private buyUrl = `${this.cartUrl}buy/`; // URL for the buy action
 
-  constructor() {}
+  // BehaviorSubject holds the current state of the cart (BookingItem[])
+  private cartItemsSource = new BehaviorSubject<BookingItem[]>([]);
+  public cartItems$ = this.cartItemsSource.asObservable();
 
-  // --- Cart Management ---
+  // Keep track of loading state for the cart
+  private isLoadingSource = new BehaviorSubject<boolean>(false);
+  public isLoading$ = this.isLoadingSource.asObservable();
 
-  // This retrieves potentially OLD format items from storage
-  private getCartItemsFromStorage(): any[] { // Use any[] temporarily
-    try {
-      const itemsJson = localStorage.getItem(this.CART_STORAGE_KEY);
-      // We don't know for sure if itemsJson contains old or new format
-      return itemsJson ? JSON.parse(itemsJson) : [];
-    } catch (e) {
-      console.error("Error reading cart items from local storage", e);
-      return [];
-    }
-  }
-
-  // This saves items (potentially mixed format now) back to storage
-  private saveCartItemsToStorage(items: any[]): void { // Use any[] temporarily
-    try {
-      localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(items));
-    } catch (e) {
-      console.error("Error saving cart items to local storage", e);
-    }
-  }
-
-  // Modify addToCart to accept the NEW Event type
-  addToCart(event: Event): void { // <--- Accepts NEW Event type
-    const currentItems = this.itemsSubject.getValue();
-    // Add the new event object directly.
-    // Note: Now currentItems might contain a mix of old and new event structures
-    // if the user had items in the cart before this change. Needs proper handling later.
-    const updatedItems = [...currentItems, event];
-    this.itemsSubject.next(updatedItems);
-    this.saveCartItemsToStorage(updatedItems);
-  }
-
-  // This method might break or give unexpected results if itemsSubject contains
-  // a mix of old/new structures, or if the required properties (id, name, price)
-  // differ significantly.
-  getGroupedCartItems(): OrderItem[] {
-    const items = this.itemsSubject.getValue(); // Contains potentially mixed items
-    const grouped: { [key: number]: OrderItem } = {};
-
-    items.forEach(item => {
-      // Try to access properties common to both old and new Event types (id, name, price)
-      const eventId = item?.id;
-      if (typeof eventId !== 'number') return; // Skip if item has no valid id
-
-      if (grouped[eventId]) {
-        grouped[eventId].quantity++;
+  constructor(
+      private http: HttpClient,
+      private authService: AuthService // Inject AuthService
+  ) {
+    // When auth status changes, fetch the cart if user is authenticated
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      if (isAuth) {
+        this.fetchCart();
       } else {
-        // Create OrderItem using properties from the new Event model where possible
-        grouped[eventId] = {
-          eventId: item.id,
-          name: item.name ?? 'Unknown Event', // Use nullish coalescing for safety
-          price: item.price ?? 0,
-          quantity: 1,
-          location: item.location // Example: include location if needed
-        };
+        // Clear cart when user logs out
+        this.cartItemsSource.next([]);
       }
     });
-    return Object.values(grouped);
+  }
+
+  /**
+   * Fetches the user's current cart items from the backend.
+   * Requires user to be authenticated (handled by backend permissions).
+   */
+  fetchCart(): void {
+    if (!this.authService.getIsAuthenticated()) {
+      // console.log('User not authenticated, cannot fetch cart.'); // Already logged
+      this.cartItemsSource.next([]);
+      return;
+    }
+
+    const csrfToken = getCookie('csrftoken');
+    // Add headers, even for GET
+    const headers = new HttpHeaders({
+      'X-CSRFToken': csrfToken || ''
+    });
+
+    console.log('Fetching cart from backend with CSRF:', csrfToken);
+    this.isLoadingSource.next(true);
+    // Add headers to the request
+    this.http.get<BookingItem[]>(this.cartUrl, { headers: headers, withCredentials: true })
+        .pipe(
+            tap(items => console.log('Raw cart items fetched:', items)),
+            catchError(err => {
+              console.error('Error fetching cart:', err);
+              this.cartItemsSource.next([]);
+              this.isLoadingSource.next(false); // Ensure loading stops on error
+              return throwError(() => err);
+            })
+        )
+        .subscribe(items => {
+          this.cartItemsSource.next(items || []);
+          this.isLoadingSource.next(false); // Ensure loading stops on success
+          console.log('Cart state updated.');
+        });
+  }
+
+  /**
+   * Adds an event to the user's cart via the backend API.
+   * Requires user to be authenticated.
+   * @param event The event to add (using the new Event model)
+   * @param quantity The quantity to add (defaulting to 1)
+   */
+  addToCart(event: Event, quantity: number = 1): void {
+    if (!this.authService.getIsAuthenticated()) {
+      console.error('User not authenticated. Cannot add to cart.');
+      // Optionally: Redirect to login or show a message
+      alert('Please log in to add items to your cart.');
+      return;
+    }
+
+    const csrfToken = getCookie('csrftoken');
+    if (!csrfToken) {
+      console.error('CSRF token not found. Cannot add to cart.');
+      alert('Could not verify request security. Please refresh and try again.');
+      return;
+    }
+
+    const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
+    // Backend expects 'event' (ID) and 'quantity'
+    const payload = { event: event.id, quantity: quantity };
+
+    console.log('Adding to cart:', payload);
+    this.isLoadingSource.next(true); // Indicate loading
+
+    this.http.post<BookingItem>(this.cartUrl, payload, { headers: headers, withCredentials: true })
+        .pipe(
+            catchError(err => {
+              console.error('Error adding item to cart:', err);
+              alert(`Failed to add ${event.name} to cart. Error: ${err.message || 'Unknown error'}`);
+              this.isLoadingSource.next(false); // Stop loading on error
+              return throwError(() => err);
+            })
+        )
+        .subscribe(newCartItem => {
+          console.log('Item added:', newCartItem);
+          // Refresh the entire cart state after adding successfully
+          this.fetchCart();
+          // Don't set isLoadingSource to false here, let fetchCart handle it
+        });
   }
 
 
+  /**
+   * Places the order by calling the backend 'buy' action.
+   * Requires user to be authenticated.
+   */
+  placeOrder(): Observable<{ message: string }> { // Backend returns { "message": "..." }
+    if (!this.authService.getIsAuthenticated()) {
+      console.error('User not authenticated. Cannot place order.');
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    const csrfToken = getCookie('csrftoken');
+    if (!csrfToken) {
+      console.error('CSRF token not found. Cannot place order.');
+      return throwError(() => new Error('CSRF token not found'));
+    }
+    const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
+
+    console.log('Placing order...');
+    this.isLoadingSource.next(true); // Indicate loading
+
+    return this.http.post<{ message: string }>(this.buyUrl, {}, { headers: headers, withCredentials: true })
+        .pipe(
+            tap(response => {
+              console.log('Order placement response:', response);
+              // Refresh cart (should be empty now) after successful order
+              this.fetchCart();
+            }),
+            catchError(err => {
+              console.error('Error placing order:', err);
+              alert(`Failed to place order. Error: ${err.message || 'Unknown error'}`);
+              this.isLoadingSource.next(false); // Stop loading on error
+              return throwError(() => err);
+            })
+            // Don't set isLoadingSource to false here, let fetchCart handle it
+        );
+  }
+
+
+  /**
+   * Calculates the total price of items currently in the cart state.
+   */
   getCartTotal(): number {
-    // This relies on getGroupedCartItems working correctly
-    return this.getGroupedCartItems().reduce((total, item) => total + (item.price * item.quantity), 0);
+    const items = this.cartItemsSource.getValue();
+    // The 'total' might already be calculated per item by the backend serializer
+    // Or calculate manually: item.event.price * item.quantity
+    return items.reduce((sum, item) => sum + (item.event.price * item.quantity), 0);
   }
 
-  clearCart(): void {
-    this.itemsSubject.next([]);
-    localStorage.removeItem(this.CART_STORAGE_KEY);
+  /**
+   * Gets the total number of items (sum of quantities) in the cart.
+   */
+  getCartItemCount(): number {
+    const items = this.cartItemsSource.getValue();
+    return items.reduce((sum, item) => sum + item.quantity, 0);
   }
 
-  // --- Order Management --- (Methods below likely need review too)
 
-  private getOrdersFromStorage(): Order[] {
-    // This assumes saved orders used the Order/OrderItem structure defined above.
-    // If the structure of saved OrderItems needs changing based on the new Event,
-    // this might need adjustment or data migration.
-    try {
-      const ordersJson = localStorage.getItem(this.ORDERS_STORAGE_KEY);
-      if (ordersJson) {
-        const parsedOrders = JSON.parse(ordersJson);
-        return parsedOrders.map((order: any) => ({
-          ...order,
-          date: new Date(order.date)
-        }));
-      }
-      return [];
-    } catch (e) {
-      console.error("Error reading orders from local storage", e);
-      return [];
-    }
-  }
+  // --- Local Storage / Old Methods Removal ---
+  // Removed getCartItemsFromStorage, saveCartItemsToStorage
+  // Removed local storage keys
+  // Removed old getGroupedCartItems (can be re-implemented if needed based on BookingItem[])
+  // Removed old placeOrder logic
+  // Removed old getOrderHistory logic (will be handled separately)
 
-  private saveOrdersToStorage(orders: Order[]): void {
-    try {
-      localStorage.setItem(this.ORDERS_STORAGE_KEY, JSON.stringify(orders));
-    } catch (e) {
-      console.error("Error saving orders to local storage", e);
-    }
-  }
-
-  placeOrder(): Order | null {
-    // This relies on getGroupedCartItems and getCartTotal working correctly
-    const cartItems = this.getGroupedCartItems();
-    if (cartItems.length === 0) {
-      console.warn("Cannot place an empty order.");
-      return null;
-    }
-
-    const newOrder: Order = {
-      id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      date: new Date(),
-      items: cartItems, // Items structure based on getGroupedCartItems
-      totalAmount: this.getCartTotal()
-    };
-
-    const allOrders = this.getOrdersFromStorage();
-    allOrders.push(newOrder);
-    this.saveOrdersToStorage(allOrders);
-    this.clearCart();
-
-    console.log('Order placed:', newOrder);
-    return newOrder;
-  }
-
-  getOrderHistory(): Order[] {
-    return this.getOrdersFromStorage();
-  }
+  // Note: A 'removeItem' or 'updateQuantity' method would typically require
+  // DELETE or PUT/PATCH requests to the backend API endpoint (`/api/cart/{booking_item_id}/`)
+  // and corresponding backend view logic in CartViewSet.
+  // This is not implemented here yet.
 }

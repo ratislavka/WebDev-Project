@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+// eventsforu/frontend/src/app/cart/cart.component.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { CartService, OrderItem, Order } from '../cart.service';
-import { Observable } from 'rxjs';
+import { CartService } from '../cart.service'; // Keep CartService import
+import { BookingItem } from '../models/booking-item.model'; // Import the new BookingItem model
+// Remove OrderItem/Order import from cart.service - they aren't used directly here now
+import { Observable, Subscription } from 'rxjs'; // Import Subscription
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -12,53 +15,76 @@ import { map } from 'rxjs/operators';
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
-export class CartComponent implements OnInit {
+export class CartComponent implements OnInit, OnDestroy { // Implement OnDestroy
 
-  cartItems$: Observable<OrderItem[]>;
+  // Use the new cartItems$ observable which emits BookingItem[]
+  cartItems$: Observable<BookingItem[]>;
   cartTotal$: Observable<number>;
+  isLoading$: Observable<boolean>; // Use loading state from service
   orderPlacedMessage: string | null = null;
-  placedOrderId: string | null = null;
+  // placedOrderId: string | null = null; // Backend 'buy' action doesn't return order ID
+
+  private cartSub?: Subscription; // To manage subscription
 
   constructor(private cartService: CartService) {
-    // Initialize observables directly from service methods/properties
-    // We need grouped items and total for the cart view
-    this.cartItems$ = this.cartService.items$.pipe(
-      map(() => this.cartService.getGroupedCartItems()) // Recalculate grouped items when source changes
-    );
-    this.cartTotal$ = this.cartService.items$.pipe(
-      map(() => this.cartService.getCartTotal()) // Recalculate total when source changes
+    // Get observables directly from the service
+    this.cartItems$ = this.cartService.cartItems$;
+    this.isLoading$ = this.cartService.isLoading$;
+
+    // Calculate total based on cartItems$ changes
+    this.cartTotal$ = this.cartItems$.pipe(
+        map(items => items.reduce((sum, item) => sum + (item.event.price * item.quantity), 0))
     );
   }
 
   ngOnInit(): void {
+    // Optional: Explicitly fetch cart if needed, though service fetches on auth change
+    // this.cartService.fetchCart();
+
+    // Example of subscribing if you need to react to cart changes directly
+    // this.cartSub = this.cartItems$.subscribe(items => {
+    //   console.log('CartComponent received updated items:', items);
+    // });
   }
+
+  ngOnDestroy(): void {
+    // Unsubscribe to prevent memory leaks
+    this.cartSub?.unsubscribe();
+  }
+
 
   // Method to handle placing the order
   handlePlaceOrder(): void {
-    const placedOrder = this.cartService.placeOrder();
-    if (placedOrder) {
-      this.orderPlacedMessage = `Order successfully placed! Your order ID is ${placedOrder.id}.`;
-      this.placedOrderId = placedOrder.id;
-      // Optionally clear message after a few seconds
-      setTimeout(() => {
-        this.orderPlacedMessage = null;
-        this.placedOrderId = null;
-      }, 5000); // Hide after 5 seconds
-    } else {
-      // Handle case where order couldn't be placed
-      this.orderPlacedMessage = 'Your cart is empty. Cannot place order.';
-      setTimeout(() => this.orderPlacedMessage = null, 3000);
-    }
+    this.orderPlacedMessage = null; // Clear previous message
+    // placedOrderId = null;
+
+    // Call the service method which now returns Observable<{message: string}>
+    this.cartService.placeOrder().subscribe({
+      next: (response) => {
+        // Backend returns a success message
+        this.orderPlacedMessage = response.message || 'Order successfully placed!';
+        // Cannot get order ID directly from this response
+        // Maybe navigate to order history?
+        // Set timeout to clear message
+        setTimeout(() => { this.orderPlacedMessage = null; }, 5000);
+      },
+      error: (err) => {
+        this.orderPlacedMessage = `Order placement failed: ${err.message || 'Please try again.'}`;
+        // Set timeout to clear error message
+        setTimeout(() => { this.orderPlacedMessage = null; }, 5000);
+      }
+    });
   }
 
-
-  handleClearCart(): void {
-    this.cartService.clearCart();
-    this.orderPlacedMessage = null;
-  }
+  // Note: clearCart was removed from service as it needs backend implementation
+  // handleClearCart(): void {
+  //   // this.cartService.clearCart(); // This method doesn't exist currently
+  //   alert('Clear Cart functionality not yet implemented.');
+  //   this.orderPlacedMessage = null;
+  // }
 
   // Optional: Track items by ID for *ngFor performance
-  trackByItemId(index: number, item: OrderItem): number {
-    return item.eventId;
+  trackByBookingItemId(index: number, item: BookingItem): number {
+    return item.id; // Use BookingItem id
   }
 }

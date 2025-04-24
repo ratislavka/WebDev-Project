@@ -1,44 +1,46 @@
 <div class="cart-container">
-  <h2 class="cart-title">Your Cart</h2>
+    <h2 class="cart-title">Your Cart</h2>
 
-  <div *ngIf="orderPlacedMessage" class="order-status-message"
-       [ngClass]="{'success': placedOrderId, 'warning': !placedOrderId}">
-    {{ orderPlacedMessage }}
-    <a *ngIf="placedOrderId" [routerLink]="['/order-history']" class="view-history-link">View Order History</a>
-  </div>
-
-  <div *ngIf="(cartItems$ | async)?.length; else emptyCart" class="cart-content">
-
-    <div class="cart-items-list">
-      <div *ngFor="let item of (cartItems$ | async); trackBy: trackByItemId" class="cart-item">
-        <div class="item-name">{{ item.name }}</div>
-        <div class="item-price">Price: {{ item.price | currency:'USD' }}</div> <div class="item-quantity">Quantity: {{ item.quantity }}</div>
-        <div class="item-subtotal">Subtotal: {{ (item.price * item.quantity) | currency:'USD' }}</div>
-      </div>
+    <div *ngIf="(isLoading$ | async)">
+        <p>Loading cart...</p>
     </div>
 
-    <div class="cart-summary-actions">
-      <div class="cart-total">
-        <span>Total: {{ (cartTotal$ | async) | currency:'USD' }}</span>
-      </div>
-      <div class="cart-buttons">
-        <button (click)="handleClearCart()" class="clear-cart-button">
-          Clear Cart
-        </button>
-        <button (click)="handlePlaceOrder()" class="place-order-button">
-          Place Order (Simulated)
-        </button>
-      </div>
+    <div *ngIf="orderPlacedMessage" class="order-status-message">
+        {{ orderPlacedMessage }}
+        <a routerLink="/order-history" class="view-history-link">View Order History</a>
     </div>
 
-  </div>
+    <div *ngIf="!(isLoading$ | async)">
+        <div *ngIf="(cartItems$ | async)?.length; else emptyCart" class="cart-content">
 
-  <ng-template #emptyCart>
-    <div class="empty-cart-message">
-      <p>Your cart is empty.</p>
-      <button routerLink="/">Browse Events</button>
-      <button routerLink="/order-history">Order History</button>
-    </div>
-  </ng-template>
+            <div class="cart-items-list">
+                <div *ngFor="let item of (cartItems$ | async); trackBy: trackByBookingItemId" class="cart-item">
+                    <div class="item-name">{{ item.event.name }}</div>
+                    <div class="item-details">{{ item.event.location }} | {{ item.event.date | date:'shortDate' }}</div>
+                    <div class="item-price">Price: {{ item.event.price | currency:'USD' }}</div>
+                    <div class="item-quantity">Quantity: {{ item.quantity }}</div>
+                    <div class="item-subtotal">Subtotal: {{ (item.event.price * item.quantity) | currency:'USD' }}</div>
+                </div>
+            </div>
 
-</div>
+            <div class="cart-summary-actions">
+                <div class="cart-total">
+                    <span>Total: {{ (cartTotal$ | async) | currency:'USD' }}</span>
+                </div>
+                <div class="cart-buttons">
+                    <button (click)="handlePlaceOrder()" class="place-order-button">
+                        Place Order
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <ng-template #emptyCart>
+            <div class="empty-cart-message">
+                <p>Your cart is empty.</p>
+                <button routerLink="/">Browse Events</button>
+                <button routerLink="/order-history">Order History</button>
+            </div>
+        </ng-template>
+    </div> </div>

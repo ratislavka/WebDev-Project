@@ -1,14 +1,20 @@
 <header class="app-header">
-  <nav class="navbar">
-    <!-- Navigation buttons -->
-    <div class="nav-buttons">
-      <button routerLink="">Main page</button>
-      <button routerLink="/login">Login</button>
-      <button routerLink="/cart">Cart</button>
-    </div>
-  </nav>
+    <nav class="navbar">
+        <div class="nav-buttons">
+            <button routerLink="">Main page</button>
+
+            <button *ngIf="!(isAuthenticated$ | async)" routerLink="/login">Login</button>
+
+            <button routerLink="/cart">Cart</button>
+
+            <button *ngIf="isAuthenticated$ | async" routerLink="/order-history">Order History</button>
+
+            <button *ngIf="isAuthenticated$ | async" (click)="logout()">Logout</button>
+
+        </div>
+    </nav>
 </header>
 
 <main class="app-main">
-<router-outlet></router-outlet>
+    <router-outlet></router-outlet>
 </main>
