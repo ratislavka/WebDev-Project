@@ -1,6 +1,29 @@
-from api.models import Ticket, BookingItem
+from api.models import Ticket, BookingItem, Customer
 from rest_framework import serializers
 from django.contrib.auth.models import User
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'password']
+
+    def create(self, validated_data):
+        user = User(
+            username = validated_data['username'],
+            first_name = validated_data['first_name'],
+            last_name = validated_data['last_name']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username']
 
 
 class EventSerializer(serializers.Serializer):
@@ -16,18 +39,13 @@ class EventSerializer(serializers.Serializer):
 
 class CustomerSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    name = serializers.CharField()
-    surname = serializers.CharField()
-    email = serializers.EmailField()
-
+    user = UserSerializer(read_only=True)
 
 class BookingItemSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
     event = EventSerializer(read_only=True)
     booking_date = serializers.DateTimeField()
     quantity = serializers.IntegerField()
-    complete = serializers.BooleanField()
     total = serializers.SerializerMethodField()
     cart_model = serializers.SerializerMethodField()
     cart_items = serializers.SerializerMethodField()
@@ -43,14 +61,13 @@ class BookingItemSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BookingItem
-        fields = ['id', 'customer', 'booking_date', 'event', 'quantity', 'complete', 'total', 'cart_model', 'cart_items']
+        fields = ['id', 'customer', 'booking_date', 'event', 'quantity', 'total', 'cart_model', 'cart_items']
 
 
 class TicketSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
     booking_item = BookingItemSerializer(read_only=True)
-    status = serializers.BooleanField()
 
     class Meta:
         model = Ticket
-        fields = ['customer', 'booking_item', 'status']
+        fields = ['customer', 'booking_item']

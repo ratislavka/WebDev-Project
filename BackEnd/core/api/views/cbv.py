@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
+from rest_framework.decorators import action
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -13,12 +14,24 @@ from rest_framework_simplejwt.views import (
 )
  
 from api.models import Event, BookingItem, Ticket, Customer
-from api.serializers import EventSerializer, BookingItemSerializer, TicketSerializer
+from api.serializers import EventSerializer, BookingItemSerializer, UserSerializer, UserRegistrationSerializer
 
-from django.utils import timezone
+
+
+
+class UserRegistrationView(CreateAPIView):
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Set login and password
-class CustomTokenObtainPairView(TokenObtainPairView):  
+class CustomerTokenObtainPairView(TokenObtainPairView):  
     def post(self, request, *agrs, **kwargs):
         try:
             response = super().post(request, *agrs, **kwargs)
@@ -55,7 +68,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             return Response({"success": False})
         
     
-class CustomRefreshTokenView(TokenRefreshView):
+class CustomerRefreshTokenView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         try:
             refresh_token = request.COOKIES.get('refresh_token')
@@ -97,6 +110,10 @@ class LogoutViewSet(CreateAPIView):
             return Response({'success': False})
         
 
+
+
+
+
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
@@ -108,11 +125,11 @@ class CartViewSet(viewsets.ModelViewSet):
     serializer_class = BookingItemSerializer
 
     def get_permissions(self):
-        if self.action == 'list' or self.action == 'create':
-
+        if self.action == 'list' or self.action == 'create': #create is used only for postman 
             return [IsAuthenticated()]
         return [AllowAny()]
 
+    # Adds events to BookingItems
     def create(self, request, *args, **kwargs):
         user = request.user
         try:
@@ -137,17 +154,21 @@ class CartViewSet(viewsets.ModelViewSet):
         return Response(serializers.data, status=status.HTTP_201_CREATED)
     
 
-class TicketViewSet(viewsets.ModelViewSet):
-    serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Ticket.objects.filter(customer__user=user)
+    # Deletes items (NOT item) from BookingItems and appends them into Ticket
+    @action(detail=False, methods=['post'], url_path='buy')
+    def buy(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            customer = Customer.objects.get(user=user)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer does not exist."}, status=status.HTTP_400_BAD_REQUEST)
         
-        for ticket in queryset:
-            if ticket.booking_item.event.date < timezone.now():
-                ticket.status = False
-                ticket.save()
+        cart_items = BookingItem.objects.filter(customer=customer)
 
-        return queryset
+        for item in cart_items:
+            Ticket.objects.create(
+                customer=customer,
+                booking_item=item
+            )
+        cart_items.delete()
+        return Response({"message": "Purchase completed"}, status=status.HTTP_200_Ok)

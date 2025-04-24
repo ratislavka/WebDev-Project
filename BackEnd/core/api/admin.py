@@ -3,16 +3,14 @@ from .models import BookingItem, Customer, Event, Ticket
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
+    list_display = ['name', 'location', 'date', 'duration', 'genre', 'price']
     search_field = ['name', 'genre', 'date']
 
-@admin.register(Customer)
-class CustomerAdmin(admin.ModelAdmin):
-    list_display = ['name', 'surname', 'email']
-    search_field = ['name', 'surname', 'email']
+admin.site.register(Customer)
 
 @admin.register(BookingItem)
 class BookingItemAdmin(admin.ModelAdmin):
-    list_display = ['booking_date', 'event', 'quantity', 'complete']
+    list_display = ['booking_date', 'event', 'quantity']
     search_fields = ['booking_date', 'event']
 
 admin.site.register(Ticket)

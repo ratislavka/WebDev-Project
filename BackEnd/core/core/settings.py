@@ -129,6 +129,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+<<<<<<< Updated upstream
 
 
 CORS_ALLOWED_ORIGINS = [
@@ -136,4 +137,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:4200",
 ]
 
+=======
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",  # Default Angular development server
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Allow cookies to be sent with cross-origin requests (important for authentication)
+>>>>>>> Stashed changes
 CORS_ALLOW_CREDENTIALS = True
