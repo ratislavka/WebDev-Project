@@ -69,35 +69,35 @@ export class CartService {
       return;
     }
 
-    const csrfToken = getCookie('csrftoken');
-    console.log('CSRF token value before check in addToCart:', csrfToken);
+    // REMOVE THESE LINES
+    // const csrfToken = getCookie('csrftoken');
+    // console.log('CSRF token value before check in addToCart:', csrfToken);
+    // if (!csrfToken) {
+    //   console.error('CSRF token check failed. Cannot add to cart.');
+    //   alert('Could not verify request security. Please refresh and try again.');
+    //   return; // Stop execution if no token
+    // }
+    // const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
+    // END REMOVE
 
-    if (!csrfToken) {
-      console.error('CSRF token check failed. Cannot add to cart.');
-      alert('Could not verify request security. Please refresh and try again.');
-      return; // Stop execution if no token
-    }
-
-    const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
-    // Payload expects 'event' (ID) and 'quantity' from backend view
     const payload = { event: event.id, quantity: quantity };
 
     console.log('Adding to cart:', payload);
     this.isLoadingSource.next(true);
 
-    this.http.post<BookingItem>(this.cartUrl, payload, { headers: headers, withCredentials: true })
+    // Modify this line - remove 'headers: headers'
+    this.http.post<BookingItem>(this.cartUrl, payload, { /* headers: headers, */ withCredentials: true }) // KEEP withCredentials: true
         .pipe(
             catchError(err => {
               console.error('Error adding item to cart:', err);
-              // Use event.name from the passed parameter
               alert(`Failed to add ${event?.name || 'event'} to cart. Error: ${err.message || 'Unknown error'}`);
               this.isLoadingSource.next(false);
               return throwError(() => err);
             })
         )
-        .subscribe((newCartItem: BookingItem) => { // Add type annotation here
+        .subscribe((newCartItem: BookingItem) => {
           console.log('Item added:', newCartItem);
-          this.fetchCart(); // Refresh cart (will set loading to false)
+          this.fetchCart();
         });
   }
 
@@ -108,17 +108,17 @@ export class CartService {
       return throwError(() => new Error('User not authenticated'));
     }
 
-    const csrfToken = getCookie('csrftoken');
-    if (!csrfToken) {
-      console.error('CSRF token not found. Cannot place order.');
-      return throwError(() => new Error('CSRF token not found'));
-    }
-    const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
+    // const csrfToken = getCookie('csrftoken');
+    // if (!csrfToken) {
+    //   console.error('CSRF token not found. Cannot place order.');
+    //   return throwError(() => new Error('CSRF token not found'));
+    // }
+    // const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
 
     console.log('Placing order...');
     this.isLoadingSource.next(true);
 
-    return this.http.post<{ message: string }>(this.buyUrl, {}, { headers: headers, withCredentials: true })
+    return this.http.post<{ message: string }>(this.buyUrl, {}, { /* headers: headers, */ withCredentials: true })
         .pipe(
             tap((response: { message: string }) => { // Add type annotation
               console.log('Order placement response:', response);

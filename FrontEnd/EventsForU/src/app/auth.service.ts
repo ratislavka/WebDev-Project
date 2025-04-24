@@ -78,23 +78,23 @@ export class AuthService {
    */
   logout(): Observable<any> {
     // Get the CSRF token from the cookie
-    const csrfToken = getCookie('csrftoken'); // Django default cookie name
-    if (!csrfToken) {
-      console.warn('CSRF token cookie not found. Logout might fail.');
-      // Handle this case if needed, maybe return an error observable
-      // import { throwError } from 'rxjs';
-      // return throwError(() => new Error('CSRF token not found'));
-    }
-
-    // Create headers object with the CSRF token
-    const headers = new HttpHeaders({
-      'X-CSRFToken': csrfToken || '', // Send token in the header
-    });
-
-    console.log('AuthService: Attempting logout with CSRF token:', csrfToken);
+    // const csrfToken = getCookie('csrftoken'); // Django default cookie name
+    // if (!csrfToken) {
+    //   console.warn('CSRF token cookie not found. Logout might fail.');
+    //   // Handle this case if needed, maybe return an error observable
+    //   // import { throwError } from 'rxjs';
+    //   // return throwError(() => new Error('CSRF token not found'));
+    // }
+    //
+    // // Create headers object with the CSRF token
+    // const headers = new HttpHeaders({
+    //   'X-CSRFToken': csrfToken || '', // Send token in the header
+    // });
+    //
+    // console.log('AuthService: Attempting logout with CSRF token:', csrfToken);
 
     // Add headers and withCredentials to the request options
-    return this.http.post(this.logoutUrl, {}, { headers: headers, withCredentials: true })
+      return this.http.post(this.logoutUrl, {}, { withCredentials: true }) 
         .pipe(
             tap({
               // Use tap with an observer object to handle next and error separately if needed
