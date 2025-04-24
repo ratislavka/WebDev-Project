@@ -1,5 +1,4 @@
-// src/environments/environment.ts
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8000/api' // Points to your local Django API
+  apiUrl: 'http://localhost:8000/api'
 };

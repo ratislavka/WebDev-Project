@@ -17,14 +17,12 @@ import { map } from 'rxjs/operators';
 })
 export class CartComponent implements OnInit, OnDestroy { // Implement OnDestroy
 
-  // Use the new cartItems$ observable which emits BookingItem[]
   cartItems$: Observable<BookingItem[]>;
   cartTotal$: Observable<number>;
-  isLoading$: Observable<boolean>; // Use loading state from service
+  isLoading$: Observable<boolean>;
   orderPlacedMessage: string | null = null;
-  // placedOrderId: string | null = null; // Backend 'buy' action doesn't return order ID
 
-  private cartSub?: Subscription; // To manage subscription
+  private cartSub?: Subscription;
 
   constructor(private cartService: CartService) {
     // Get observables directly from the service
@@ -38,13 +36,6 @@ export class CartComponent implements OnInit, OnDestroy { // Implement OnDestroy
   }
 
   ngOnInit(): void {
-    // Optional: Explicitly fetch cart if needed, though service fetches on auth change
-    // this.cartService.fetchCart();
-
-    // Example of subscribing if you need to react to cart changes directly
-    // this.cartSub = this.cartItems$.subscribe(items => {
-    //   console.log('CartComponent received updated items:', items);
-    // });
   }
 
   ngOnDestroy(): void {
@@ -63,28 +54,17 @@ export class CartComponent implements OnInit, OnDestroy { // Implement OnDestroy
       next: (response) => {
         // Backend returns a success message
         this.orderPlacedMessage = response.message || 'Order successfully placed!';
-        // Cannot get order ID directly from this response
-        // Maybe navigate to order history?
-        // Set timeout to clear message
         setTimeout(() => { this.orderPlacedMessage = null; }, 5000);
       },
       error: (err) => {
         this.orderPlacedMessage = `Order placement failed: ${err.message || 'Please try again.'}`;
-        // Set timeout to clear error message
         setTimeout(() => { this.orderPlacedMessage = null; }, 5000);
       }
     });
   }
 
-  // Note: clearCart was removed from service as it needs backend implementation
-  // handleClearCart(): void {
-  //   // this.cartService.clearCart(); // This method doesn't exist currently
-  //   alert('Clear Cart functionality not yet implemented.');
-  //   this.orderPlacedMessage = null;
-  // }
 
-  // Optional: Track items by ID for *ngFor performance
   trackByBookingItemId(index: number, item: BookingItem): number {
-    return item.id; // Use BookingItem id
+    return item.id;
   }
 }

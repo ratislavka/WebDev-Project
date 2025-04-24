@@ -1,9 +1,8 @@
-// eventsforu/frontend/src/app/event-list/event-list.component.ts
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CartService } from '../cart.service';
-import { Event } from '../models/event.model'; // <--- Change this import
+import { Event } from '../models/event.model';
 
 @Component({
   selector: 'app-event-list',
@@ -14,11 +13,10 @@ import { Event } from '../models/event.model'; // <--- Change this import
 })
 export class EventListComponent implements OnInit, OnChanges {
 
-  @Input() eventsToShow: Event[] = []; // Now uses the new Event type
+  @Input() eventsToShow: Event[] = [];
 
   sortedEvents: Event[] = [];
 
-  // Ensure 'date' is a valid key in the new Event model for sorting
   currentSortKey: keyof Event | null = 'date';
   sortDirection: 'asc' | 'desc' = 'asc';
 
@@ -34,10 +32,7 @@ export class EventListComponent implements OnInit, OnChanges {
     }
   }
 
-  // Ensure 'key' is a valid property of the new Event model
   sortEvents(key: keyof Event): void {
-    // Check if the key exists on the Event model if necessary,
-    // although 'name' and 'date' are present.
     if (this.currentSortKey === key) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -46,14 +41,11 @@ export class EventListComponent implements OnInit, OnChanges {
     }
     this.applySort();
   }
-// In eventsforu/frontend/src/app/event-list/event-list.component.ts
-// Inside the EventListComponent class
 
   private applySort(): void {
     let sorted = [...this.eventsToShow];
 
     if (this.currentSortKey) {
-      // Check if the key exists on the Event model if necessary
       if (sorted.length > 0 && !(this.currentSortKey in sorted[0])) {
         console.warn(`Cannot sort by key "${this.currentSortKey}" as it doesn't exist on the Event model.`);
         this.currentSortKey = null; // Reset sort key
@@ -63,7 +55,6 @@ export class EventListComponent implements OnInit, OnChanges {
           const valB = b[this.currentSortKey!];
 
           let comparison = 0;
-          // Add null/undefined checks for robust comparison
           const valAExists = valA !== null && typeof valA !== 'undefined';
           const valBExists = valB !== null && typeof valB !== 'undefined';
 
@@ -71,12 +62,10 @@ export class EventListComponent implements OnInit, OnChanges {
             if (valA > valB) comparison = 1;
             else if (valA < valB) comparison = -1;
           } else if (valAExists) {
-            comparison = 1; // Treat existing value as greater
+            comparison = 1;
           } else if (valBExists) {
-            comparison = -1; // Treat existing value as greater
+            comparison = -1;
           }
-          // else comparison remains 0 if both are null/undefined
-
           return this.sortDirection === 'asc' ? comparison : comparison * -1;
         });
       }
@@ -84,18 +73,10 @@ export class EventListComponent implements OnInit, OnChanges {
     this.sortedEvents = sorted;
   }
 
-  // This function might need adjustment later depending on how
-  // CartService is updated (if it also needs the new Event model).
+
   addToCart(event: Event): void {
-    // We now expect the service to handle errors internally (like CSRF)
-    // and potentially not even proceed. The component doesn't need to
-    // assume success immediately. For now, we keep the alert simple.
-    // A better approach involves the service returning status/observable.
     this.cartService.addToCart(event);
 
-    // Consider moving this alert to be shown *after* confirmation
-    // from the service that the item was *actually* added (requires service changes).
-    // For now, it remains immediate but potentially misleading if service fails silently.
     alert(`${event.name} has been added to your cart request sent.`); // Clarify alert
   }
 }

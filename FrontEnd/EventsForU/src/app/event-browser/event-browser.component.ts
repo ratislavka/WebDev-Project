@@ -16,14 +16,13 @@ import { Event } from '../models/event.model';
 })
 export class EventBrowserComponent implements OnInit {
 
-  // Filter state properties - use string type now
-  selectedGenre: string | null = null; // Changed from selectedCategory
-  selectedDate: string | null = null;  // Keep as string (matching backend format)
+  selectedGenre: string | null = null;
+  selectedDate: string | null = null;
   searchTerm: string = '';
 
   // Properties to hold dynamic filter options
   availableGenres: string[] = [];
-  availableDates: string[] = []; // Store unique date strings (e.g., "2025-05-01")
+  availableDates: string[] = [];
 
   allEvents: Event[] = [];
   isLoading: boolean = true;
@@ -56,7 +55,7 @@ export class EventBrowserComponent implements OnInit {
     const genres = this.allEvents.map(event => event.genre);
     this.availableGenres = [...new Set(genres)].sort(); // Unique, sorted genres
 
-    // Extract unique dates (keep original string format for filtering)
+    // Extract unique dates
     const dates = this.allEvents.map(event => event.date);
     this.availableDates = [...new Set(dates)].sort(); // Unique, sorted date strings
   }
@@ -65,12 +64,12 @@ export class EventBrowserComponent implements OnInit {
   get filteredEvents(): Event[] {
     let events = this.allEvents;
 
-    // Filter by Genre (string comparison)
+    // Filter by Genre
     if (this.selectedGenre) {
       events = events.filter(e => e.genre === this.selectedGenre);
     }
 
-    // Filter by Date (exact string comparison)
+    // Filter by Date
     if (this.selectedDate) {
       events = events.filter(e => e.date === this.selectedDate);
     }
@@ -88,18 +87,17 @@ export class EventBrowserComponent implements OnInit {
   }
 
 
-  // --- Filter selection methods ---
-  selectGenre(genre: string | null): void { // Renamed, uses string
+  selectGenre(genre: string | null): void {
     this.selectedGenre = genre;
   }
 
-  selectDate(date: string | null): void { // Uses string
+  selectDate(date: string | null): void {
     this.selectedDate = date;
   }
 
   resetFilters(): void {
-    this.selectedGenre = null; // Reset string filter
-    this.selectedDate = null; // Reset string filter
+    this.selectedGenre = null;
+    this.selectedDate = null;
     this.searchTerm = '';
   }
 }

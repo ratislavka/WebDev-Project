@@ -4,14 +4,12 @@ export enum Category {
   Movies = 'Movies',
   Tech = 'Tech',
   Art = 'Art',
-  // Add more categories as needed
 }
 
 export enum EventDate {
   May1 = '1 May',
   May2 = '2 May',
   May3 = '3 May',
-  // Add more dates as needed
 }
 
 

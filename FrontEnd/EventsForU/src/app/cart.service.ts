@@ -1,14 +1,12 @@
-// eventsforu/frontend/src/app/cart.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http'; // Ensure HttpHeaders imported
-import { BehaviorSubject, Observable, throwError } from 'rxjs'; // Ensure throwError imported
-import { catchError, tap, map } from 'rxjs/operators'; // Ensure operators imported
-
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, tap, map } from 'rxjs/operators';
 import { Event } from './models/event.model';
 import { BookingItem } from './models/booking-item.model';
 import { AuthService } from './auth.service';
 
-// Helper function (ensure this is defined outside the class)
+// Helper function
 function getCookie(name: string): string | null {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -53,13 +51,31 @@ export class CartService {
   }
 
   fetchCart(): void {
-    if (!this.authService.getIsAuthenticated()) { /* ... */ return; }
-    console.log('Fetching cart from backend...');
+    if (!this.authService.getIsAuthenticated()) {
+      return;
+    }
     this.isLoadingSource.next(true);
-    // Remove headers - not needed for GET if auth cookie works
-    this.http.get<BookingItem[]>(this.cartUrl, { withCredentials: true }) // Just send credentials
-        .pipe(/* ... same tap/catchError ... */)
-        .subscribe(/* ... same subscribe block ... */);
+
+    this.http.get<BookingItem[]>(this.cartUrl, { withCredentials: true })
+        .pipe(
+            tap(items => {
+              console.log('Fetched cart items:', items);
+              this.cartItemsSource.next(items || []);
+            }),
+            catchError(err => {
+              console.error('Error fetching cart:', err);
+              this.cartItemsSource.next([]);
+              return throwError(() => err);
+            })
+        )
+        .subscribe({
+          next: () => {
+            this.isLoadingSource.next(false);
+          },
+          error: () => {
+            this.isLoadingSource.next(false);
+          }
+        });
   }
 
   addToCart(event: Event, quantity: number = 1): void {
@@ -69,24 +85,24 @@ export class CartService {
       return;
     }
 
-    // REMOVE THESE LINES
-    // const csrfToken = getCookie('csrftoken');
-    // console.log('CSRF token value before check in addToCart:', csrfToken);
-    // if (!csrfToken) {
-    //   console.error('CSRF token check failed. Cannot add to cart.');
-    //   alert('Could not verify request security. Please refresh and try again.');
-    //   return; // Stop execution if no token
-    // }
-    // const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
-    // END REMOVE
+
+    const csrfToken = getCookie('csrftoken');
+    console.log('CSRF token value before check in addToCart:', csrfToken);
+    if (!csrfToken) {
+      console.error('CSRF token check failed. Cannot add to cart.');
+      alert('Could not verify request security. Please refresh and try again.');
+      return; // Stop execution if no token
+    }
+    const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
+
 
     const payload = { event: event.id, quantity: quantity };
 
     console.log('Adding to cart:', payload);
     this.isLoadingSource.next(true);
 
-    // Modify this line - remove 'headers: headers'
-    this.http.post<BookingItem>(this.cartUrl, payload, { /* headers: headers, */ withCredentials: true }) // KEEP withCredentials: true
+
+    this.http.post<BookingItem>(this.cartUrl, payload, { headers: headers,  withCredentials: true })
         .pipe(
             catchError(err => {
               console.error('Error adding item to cart:', err);
@@ -108,21 +124,21 @@ export class CartService {
       return throwError(() => new Error('User not authenticated'));
     }
 
-    // const csrfToken = getCookie('csrftoken');
-    // if (!csrfToken) {
-    //   console.error('CSRF token not found. Cannot place order.');
-    //   return throwError(() => new Error('CSRF token not found'));
-    // }
-    // const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
+    const csrfToken = getCookie('csrftoken');
+    if (!csrfToken) {
+      console.error('CSRF token not found. Cannot place order.');
+      return throwError(() => new Error('CSRF token not found'));
+    }
+    const headers = new HttpHeaders({ 'X-CSRFToken': csrfToken });
 
     console.log('Placing order...');
     this.isLoadingSource.next(true);
 
-    return this.http.post<{ message: string }>(this.buyUrl, {}, { /* headers: headers, */ withCredentials: true })
+    return this.http.post<{ message: string }>(this.buyUrl, {}, { headers: headers,  withCredentials: true })
         .pipe(
-            tap((response: { message: string }) => { // Add type annotation
+            tap((response: { message: string }) => {
               console.log('Order placement response:', response);
-              this.fetchCart(); // Refresh cart (will set loading to false)
+              this.fetchCart();
             }),
             catchError(err => {
               console.error('Error placing order:', err);
@@ -137,7 +153,6 @@ export class CartService {
   getCartTotal(): number {
     const items = this.cartItemsSource.getValue();
     return items.reduce((sum, item) => {
-      // Add checks for safety as event might theoretically be missing
       const price = item?.event?.price ?? 0;
       const quantity = item?.quantity ?? 0;
       return sum + (price * quantity);
@@ -150,4 +165,4 @@ export class CartService {
     return items.reduce((sum, item) => sum + (item?.quantity ?? 0), 0);
   }
 
-} // End of CartService class
+}

@@ -131,7 +131,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",  # Default Angular development server
+    "http://localhost:4200",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

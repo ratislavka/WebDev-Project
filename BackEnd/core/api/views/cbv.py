@@ -17,8 +17,6 @@ from api.models import Event, BookingItem, Ticket, Customer
 from api.serializers import EventSerializer, BookingItemSerializer, UserSerializer, UserRegistrationSerializer
 
 
-
-
 class UserRegistrationView(CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = [AllowAny]
@@ -30,7 +28,6 @@ class UserRegistrationView(CreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Set login and password
 class CustomerTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *agrs, **kwargs):
         try:
@@ -48,18 +45,18 @@ class CustomerTokenObtainPairView(TokenObtainPairView):
                 key="access_token",
                 value=access_token,
                 httponly=True,
-                # secure=True,      # REMOVE or set to False for HTTP localhost
-                # samesite='None',  # CHANGE for HTTP localhost
-                samesite='Lax',  # Use Lax for localhost dev
+                secure=True,
+                samesite='None',
+                samesite='Lax',
                 path='/'
             )
             res.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
                 httponly=True,
-                # secure=True,      # REMOVE or set to False for HTTP localhost
-                # samesite='None',  # CHANGE for HTTP localhost
-                samesite='Lax',  # Use Lax for localhost dev
+                secure=True,
+                samesite='None',
+                samesite='Lax',
                 path='/'
             )
 
@@ -68,7 +65,7 @@ class CustomerTokenObtainPairView(TokenObtainPairView):
         except:
             return Response({"success": False})
         
-    
+
 class CustomerRefreshTokenView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         try:
@@ -89,9 +86,9 @@ class CustomerRefreshTokenView(TokenRefreshView):
                 key="access_token",
                 value=access_token,
                 httponly=True,
-                # secure=True,      # REMOVE or set to False for HTTP localhost
-                # samesite='None',  # CHANGE for HTTP localhost
-                samesite='Lax',  # Use Lax for localhost dev
+                secure=True,
+                samesite='None',
+                samesite='Lax',
                 path='/'
             )
 
@@ -99,7 +96,7 @@ class CustomerRefreshTokenView(TokenRefreshView):
 
         except:
             return Response()
-        
+
 class LogoutViewSet(CreateAPIView):
     def post(self, request, *args, **kwargs):
         try:
@@ -123,40 +120,71 @@ class EventViewSet(viewsets.ModelViewSet):
 
 
 class CartViewSet(viewsets.ModelViewSet):
-    queryset = BookingItem.objects.all()
-    serializer_class = BookingItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        try:
+            customer = Customer.objects.get(user=user)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer profile does not exist for this user."}, status=400)
+
+        items = BookingItem.objects.filter(customer=customer)
+        serializer = BookingItemSerializer(items, many=True)
+        return Response(serializer.data)
 
     def get_permissions(self):
-        if self.action == 'list' or self.action == 'create': #create is used only for postman 
+        if self.action == 'list' or self.action == 'create':
             return [IsAuthenticated()]
         return [AllowAny()]
 
-    # Adds events to BookingItems
+
     def create(self, request, *args, **kwargs):
         user = request.user
         try:
-            customer = BookingItem.objects.filter(customer__user=user)
+            customer = Customer.objects.get(user=user)
         except Customer.DoesNotExist:
-            return Response({"error": "Customer does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        event_id = request.data.get("id")
+
+            return Response({"error": "Customer profile does not exist for this user."}, status=status.HTTP_400_BAD_REQUEST)
+
+        event_id = request.data.get("event")
         quantity = request.data.get("quantity")
+
+
+        if quantity is None:
+            return Response({"error": "Quantity is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                raise ValueError("Quantity must be positive.")
+        except (ValueError, TypeError):
+             return Response({"error": "Invalid quantity provided."}, status=status.HTTP_400_BAD_REQUEST)
+
 
         try:
             event = Event.objects.get(id=event_id)
         except Event.DoesNotExist:
             return Response({"error": 'Event Not Found'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        booking = BookingItem.objects.create(
+
+
+        booking, created = BookingItem.objects.get_or_create(
             customer=customer,
             event=event,
-            quantity=quantity
+            defaults={'quantity': quantity}
         )
-        serializers = BookingItemSerializer(booking)
-        return Response(serializers.data, status=status.HTTP_201_CREATED)
-    
 
-    # Deletes items (NOT item) from BookingItems and appends them into Ticket
+        if not created:
+
+            booking.quantity += quantity
+            booking.save()
+            status_code = status.HTTP_200_OK
+        else:
+             status_code = status.HTTP_201_CREATED #
+
+        serializers = BookingItemSerializer(booking)
+        return Response(serializers.data, status=status_code)
+
+
     @action(detail=False, methods=['post'], url_path='buy')
     def buy(self, request, *args, **kwargs):
         user = request.user

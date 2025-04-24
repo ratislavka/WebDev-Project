@@ -12,13 +12,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User(
             username = validated_data['username'],
-            first_name = validated_data['first_name'],
-            last_name = validated_data['last_name']
+            first_name = validated_data.get('first_name', ''),
+            last_name = validated_data.get('last_name', '')
+
         )
         user.set_password(validated_data['password'])
         user.save()
-        return user
 
+        Customer.objects.create(user=user)
+
+        return user
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

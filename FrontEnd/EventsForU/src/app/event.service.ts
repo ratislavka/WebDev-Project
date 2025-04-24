@@ -1,13 +1,11 @@
-// eventsforu/frontend/src/app/event.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http'; // Import HttpHeaders
-import { Observable, throwError, of } from 'rxjs'; // Import throwError/of if using them in error handling
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, throwError, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-
 import { Event } from './models/event.model';
-import { Ticket } from './models/ticket.model'; // Import Ticket model
+import { Ticket } from './models/ticket.model';
 
-// Helper function (ensure this is defined outside the class)
+// Helper function
 function getCookie(name: string): string | null {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -51,7 +49,7 @@ export class EventService {
         const ticketsUrl = `${this.apiUrl}tickets/`;
         console.log('Fetching order history from:', ticketsUrl);
         // Remove headers - not needed for GET if auth cookie works
-        return this.http.get<Ticket[]>(ticketsUrl, { withCredentials: true }) // Just send credentials
+        return this.http.get<Ticket[]>(ticketsUrl, { withCredentials: true }) // Send credentials
             .pipe(
                 tap(tickets => console.log('Fetched order history:', tickets)),
                 catchError(err => {
